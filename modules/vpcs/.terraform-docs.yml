@@ -1,0 +1,48 @@
+---
+formatter: markdown table
+header-from: main.tf
+content: |-
+  # SPCv2 VPC 생성 모듈
+
+  이 모듈은 SPCv2 에서 VPC를 생성 하는 모듈이다.
+
+  ## Table of Contents
+
+  - [Overview][1]
+  - [Example Input][2]
+  - [Requirements][3]
+  - [Inputs][4]
+  - [Outputs][5]
+  - [Modules][6]
+  - [Resources][7]
+
+  ## Overview
+
+  기본 cidr 와 추가 cidr 을 입력할 수 있도록 구성되어 있다.
+
+  {{ .Header }}
+
+  {{ .Requirements }}{{"\n"}}
+  {{ .Inputs }}{{"\n"}}
+  {{ .Outputs }}{{"\n"}}
+  {{ .Modules }}{{"\n"}}
+  {{ .Resources }}{{"\n"}}
+  [1]: #overview
+  [2]: #example-input
+  [3]: #requirements
+  [4]: #inputs
+  [5]: #outputs
+  [6]: #modules
+  [7]: #resources
+
+sort:
+  enabled: true
+output:
+  file: README.md
+  mode: replace
+  template: |-
+    {{ .Content }}{{"\n"}}
+settings:
+  indent: 2
+  read-comments: false
+  hide-empty: false
