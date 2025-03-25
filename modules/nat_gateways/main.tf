@@ -59,5 +59,5 @@ resource "aws_nat_gateway" "this" {
   )
 
   # NAT Gateway 생성 시, EIP가 필요한 경우 해당 EIP 리소스 생성이 완료된 후에 진행하도록 의존성을 설정합니다.
-  depends_on = each.value.public && each.value.allocation_id == "" ? [aws_eip.this[each.key]] : []
+  depends_on = [aws_eip.this[each.key]]
 }
