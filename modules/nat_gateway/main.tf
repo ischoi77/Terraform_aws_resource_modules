@@ -1,0 +1,63 @@
+/*
+Title: SPCv2 NAT-Gateway module
+Author: Inseok-Choi
+contect: is25.choi@partner.samsung.com, ischoi.scloud@gmail.com
+
+*/
+
+
+locals {
+  # CSV 파일을 읽어 리스트 오브젝트로 변환 (CSV 파일은 반드시 헤더 row가 있어야 함)
+  nat_gateways_raw = csvdecode(file(var.nat_gateway_csv_file))
+
+  # CSV 파일의 각 행을 nat_gateway_name을 key로 갖는 map으로 재구성하고,
+  # public 필드는 소문자 비교를 통해 bool 값으로 변환하며 allocation_id는 trim 처리함.
+  nat_gateways = {
+    for row in local.nat_gateways_raw : row.nat_gateway_name => {
+      nat_gateway_name = row.nat_gateway_name
+      subnet           = row.subnet
+      public           = lower(trim(row.public)) == "true"
+      allocation_id    = trim(row.allocation_id)
+    }
+  }
+
+  # public NAT Gateway 중 allocation_id 값이 비어있는 항목에 대해 EIP를 생성해야 함.
+  nat_gateways_eip_required = {
+    for key, ng in local.nat_gateways : key => ng
+    if ng.public && ng.allocation_id == ""
+  }
+}
+
+# 필요한 경우, public NAT Gateway에 대해 Elastic IP를 생성합니다.
+resource "aws_eip" "this" {
+  for_each = local.nat_gateways_eip_required
+  
+  tags = merge(
+    var.common_tags,
+    { Name = "${each.key}-eip" }
+  )
+}
+
+# 각 NAT Gateway를 생성합니다.
+resource "aws_nat_gateway" "this" {
+  for_each = local.nat_gateways
+
+  subnet_id = each.value.subnet
+
+  connectivity_type = each.value.public ? "public" : "private"
+
+  # public NAT Gateway의 경우 allocation_id가 필요합니다.
+  # CSV에 값이 있으면 해당 allocation_id를 사용하고,
+  # 값이 비어있으면 생성한 EIP의 allocation_id를 사용합니다.
+  allocation_id = each.value.public ? (
+    each.value.allocation_id != "" ? each.value.allocation_id : aws_eip.this[each.key].allocation_id
+  ) : null
+
+  tags = merge(
+    var.common_tags,
+    { Name = each.value.nat_gateway_name }
+  )
+
+  # NAT Gateway 생성 시, EIP가 필요한 경우 해당 EIP 리소스 생성이 완료된 후에 진행하도록 의존성을 설정합니다.
+  depends_on = each.value.public && each.value.allocation_id == "" ? [aws_eip.this[each.key]] : []
+}
