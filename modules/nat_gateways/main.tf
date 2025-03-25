@@ -17,7 +17,7 @@ locals {
       nat_gateway_name = row.nat_gateway_name
       subnet           = row.subnet
       public           = lower(trim(row.public)) == "true"
-      allocation_id    = trim(row.allocation_id)
+      allocation_id    = trim(row.allocation_id, " ")
     }
   }
 
