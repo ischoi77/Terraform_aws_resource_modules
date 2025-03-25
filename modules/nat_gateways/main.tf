@@ -16,7 +16,7 @@ locals {
     for row in local.nat_gateways_raw : row.nat_gateway_name => {
       nat_gateway_name = row.nat_gateway_name
       subnet           = row.subnet
-      public           = lower(trim(row.public)) == "true"
+      public           = lower(trimspace(row.public)) == "true"
       allocation_id    = trim(row.allocation_id, " ")
     }
   }
