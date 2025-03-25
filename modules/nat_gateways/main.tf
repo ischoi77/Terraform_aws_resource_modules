@@ -31,6 +31,8 @@ locals {
 # 필요한 경우, public NAT Gateway에 대해 Elastic IP를 생성합니다.
 resource "aws_eip" "this" {
   for_each = local.nat_gateways_eip_required
+
+  vpc = true
   
   tags = merge(
     var.common_tags,
@@ -44,7 +46,7 @@ resource "aws_nat_gateway" "this" {
 
   subnet_id = each.value.subnet
 
-  connectivity_type = each.value.public ? "public" : "private"
+  # connectivity_type = each.value.public ? "public" : "private"
 
   # public NAT Gateway의 경우 allocation_id가 필요합니다.
   # CSV에 값이 있으면 해당 allocation_id를 사용하고,
