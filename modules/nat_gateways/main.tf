@@ -24,7 +24,7 @@ locals {
   # public NAT Gateway 중 allocation_id 값이 비어있는 항목에 대해 EIP를 생성해야 함.
   nat_gateways_eip_required = {
     for key, ng in local.nat_gateways : key => ng
-    if ng.public && ng.allocation_id == ""
+    if ng.public && (ng.allocation_id == "" || ng.allocation_id == null)
   }
 }
 
