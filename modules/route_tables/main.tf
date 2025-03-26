@@ -1,13 +1,3 @@
-terraform {
-  required_version = ">= 1.9.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "3.40.0"
-    }
-  }
-}
-
 locals {
   # 외부 모듈에서 전달받은 igw_ids, ngw_ids, vpc_peering_ids 를 통합하여 gateway_map 을 생성합니다.
   gateway_map = merge(var.igw_ids, var.ngw_ids, var.vpc_peering_ids)
