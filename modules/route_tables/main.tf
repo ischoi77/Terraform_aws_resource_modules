@@ -1,29 +1,33 @@
-/*
-Title: SPCv2 route_table module
-Author: Inseok-Choi
-contect: is25.choi@partner.samsung.com, ischoi.scloud@gmail.com
-
-*/
-
-locals {
-  # 각 route table별로 ip_lists 파일을 읽어 destination CIDR 블록을 가져오고,
-  # 해당 route table의 gateway 타입에 따라 igw_ids 또는 ngw_ids 리스트에서 인덱스 기반으로 gateway_id를 할당합니다.
-  parsed_routes = {
-    for rt_key, rt in var.route_tables : rt_key => [
-      for index, line in split("\n", trim(file("${path.root}/ip_lists/${rt.route_key}.list"))) :
-      {
-        destination_cidr_block = trim(line)
-        gateway_id = (
-          rt.gateway == "igw" ? element(var.igw_ids, index) :
-          rt.gateway == "ngw" ? element(var.ngw_ids, index) :
-          ""
-        )
-      }
-    ]
+terraform {
+  required_version = ">= 1.9.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "3.40.0"
+    }
   }
 }
 
-# Route Table 생성 (각 route table은 지정된 VPC 내에 생성됨)
+locals {
+  # 외부 모듈에서 전달받은 igw_ids, ngw_ids, vpc_peering_ids 를 통합하여 gateway_map 을 생성합니다.
+  gateway_map = merge(var.igw_ids, var.ngw_ids, var.vpc_peering_ids)
+
+  # 각 route table의 각 routes 항목에 대해 ip_lists 파일을 읽어 destination CIDR 블록을 파싱하고,
+  # 지정된 gateway 값(키)를 local.gateway_map 에서 lookup 하여 gateway_id 를 할당합니다.
+  parsed_routes = flatten([
+    for rt_key, rt in var.route_tables : [
+      for route_item in rt.routes : [
+        for line in split("\n", trim(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
+          route_table_key        = rt_key,
+          destination_cidr_block = trim(line),
+          gateway_id             = lookup(local.gateway_map, route_item.gateway, "")
+        }
+      ]
+    ]
+  ])
+}
+
+# 각 route table을 생성합니다.
 resource "aws_route_table" "this" {
   for_each = var.route_tables
 
@@ -36,27 +40,24 @@ resource "aws_route_table" "this" {
   )
 }
 
-# 각 ip_lists 파일의 각 라인에 대해 aws_route 리소스를 생성
+# ip_lists 파일의 각 라인마다 aws_route 리소스를 생성합니다.
 resource "aws_route" "this" {
-  for_each = {
-    for rt_key, routes in local.parsed_routes :
-    for idx, route in routes :
-      "${rt_key}-${idx}" => merge(route, { route_table_id = aws_route_table.this[rt_key].id })
-  }
+  for_each = { for idx, route in local.parsed_routes : "${route.route_table_key}-${idx}" => route }
 
-  route_table_id         = each.value.route_table_id
+  route_table_id         = aws_route_table.this[each.value.route_table_key].id
   destination_cidr_block = each.value.destination_cidr_block
   gateway_id             = each.value.gateway_id
 }
 
-# 각 route table에 지정된 서브넷과 연결하는 aws_route_table_association 리소스 생성
+# 외부 모듈(module.subnets)에서 전달받은 subnet_ids map 에서 선택한 서브넷 이름을 lookup 하여
+# 각 route table에 대해 aws_route_table_association 리소스를 생성합니다.
 resource "aws_route_table_association" "this" {
   for_each = {
     for rt_key, rt in var.route_tables :
-    for idx, subnet in rt.subnets :
+    for idx, subnet_name in rt.subnets :
       "${rt_key}-${idx}" => {
-        route_table_id = aws_route_table.this[rt_key].id
-        subnet_id      = subnet
+        route_table_id = aws_route_table.this[rt_key].id,
+        subnet_id      = lookup(var.subnet_ids, subnet_name, "")
       }
   }
 
