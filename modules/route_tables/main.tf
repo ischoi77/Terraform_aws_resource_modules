@@ -91,7 +91,7 @@ locals {
 resource "aws_route_table" "this" {
   for_each = var.route_tables
 
-  vpc_id = var.vpc_ids[vpc_name]
+  vpc_id = var.vpc_ids[vpc_name].id
 
   tags = merge(
     var.common_tags,
