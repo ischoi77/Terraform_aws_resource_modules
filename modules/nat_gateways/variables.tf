@@ -8,6 +8,10 @@ variable "common_tags" {
   type        = map(string)
 }
 
+variable "subnet_ids" {
+  type        = map(string)
+}
+
 variable "nat_gateway_csv_file" {
   description = <<-EOT
     NAT Gateway 생성 정보를 담은 CSV 파일의 경로.

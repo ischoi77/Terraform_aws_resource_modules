@@ -44,7 +44,7 @@ resource "aws_eip" "this" {
 resource "aws_nat_gateway" "this" {
   for_each = local.nat_gateways
 
-  subnet_id = each.value.subnet
+  subnet_id = var.subnet_ids[each.value.subnet]
 
 
 
