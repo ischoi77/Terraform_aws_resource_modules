@@ -54,7 +54,7 @@ resource "aws_nat_gateway" "this" {
   allocation_id = each.value.public ? (
     each.value.allocation_id != "" ? each.value.allocation_id : data.aws_eip.natgw_eip_lookup[each.key].allocation_id
   ) : null
-  
+
   tags = merge(
     var.common_tags,
     { Name = each.value.nat_gateway_name }
@@ -73,5 +73,5 @@ data "aws_eip" "natgw_eip_lookup" {
   }
 
   # EIP 리소스가 생성된 이후에 조회하도록 명시
-  depends_on = [aws_eip.natgw_eip]
+  depends_on = [aws_eip.this]
 }
