@@ -1,7 +1,7 @@
-variable "vpc_id" {
-  description = "Route table을 생성할 VPC ID"
-  type        = string
-}
+# variable "vpc_id" {
+#   description = "Route table을 생성할 VPC ID"
+#   type        = string
+# }
 
 variable "route_tables" {
   description = "각 route table에 대한 구성 정보"
