@@ -46,14 +46,15 @@ resource "aws_nat_gateway" "this" {
 
   subnet_id = each.value.subnet
 
-  # connectivity_type = each.value.public ? "public" : "private"
+
 
   # public NAT Gateway의 경우 allocation_id가 필요합니다.
   # CSV에 값이 있으면 해당 allocation_id를 사용하고,
   # 값이 비어있으면 생성한 EIP의 allocation_id를 사용합니다.
+  #allocation_id = each.value.public ? (each.value.allocation_id != "" ? each.value.allocation_id : aws_eip.this[each.key].allocation_id ) : null
   allocation_id = each.value.public ? (
-    each.value.allocation_id != "" ? each.value.allocation_id : aws_eip.this[each.key].allocation_id
-  ) : null
+  each.value.allocation_id != "" ? each.value.allocation_id : lookup(aws_eip.this, each.key, { allocation_id = null }).allocation_id
+) : null
 
   tags = merge(
     var.common_tags,
