@@ -91,7 +91,7 @@ locals {
 resource "aws_route_table" "this" {
   for_each = var.route_tables
 
-  vpc_id = var.vpc_ids[vpc_name].id
+  vpc_id = lookup(var.vpc_ids, each.value.vpc_name, "")
 
   tags = merge(
     var.common_tags,
