@@ -7,6 +7,7 @@ variable "route_tables" {
   description = "각 route table에 대한 구성 정보"
   type = map(object({
     name    = string         // route table 이름
+    vpc_name = string
     routes  = list(object({
       route_key = string      // ip_lists/<route_key>.list 파일 접두어 (파일은 destination CIDR 블록만 포함)
       gateway   = string      // 사용할 gateway 이름 (local.gateway_map 의 key 값)
@@ -24,6 +25,12 @@ variable "common_tags" {
 variable "aws_region" {
   description = "AWS 리전 정보"
   type        = string
+}
+
+
+variable "vpc_ids" {
+  description = "module.vpcs.vpc_ids에서 전달받은, VPC 이름을 키로 하는 VPC ID 목록"
+  type        = map(string)
 }
 
 # 외부 모듈에서 전달받은 igw_ids, ngw_ids, vpc_peering_ids 는 각각 map 형식입니다.
