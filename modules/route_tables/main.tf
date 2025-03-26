@@ -56,7 +56,6 @@
 # }
 
 locals {
-  # igw_ids만 merge하여 기본 gateway_map 생성 (vpc_peering_ids와 ngw_ids는 별도 처리)
   gateway_map = var.igw_ids
 
   parsed_routes = flatten([
@@ -65,13 +64,9 @@ locals {
         for line in split("\n", trimspace(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
           route_table_key           = rt_key,
           destination_cidr_block    = trimspace(line),
-          gateway_id = length(regexall("peering", route_item.route_key)) > 0 ? null :
-                       length(regexall("ngw", route_item.route_key)) > 0 ? null :
-                       lookup(local.gateway_map, route_item.gateway, ""),
-          nat_gateway_id = length(regexall("ngw", route_item.route_key)) > 0 ?
-                           lookup(var.ngw_ids, route_item.gateway, "") : null,
-          vpc_peering_connection_id = length(regexall("peering", route_item.route_key)) > 0 ?
-                                      lookup(var.vpc_peering_ids, route_item.gateway, "") : null
+          gateway_id = (length(regexall("peering", route_item.route_key)) > 0 ? null : (length(regexall("ngw", route_item.route_key)) > 0 ? null : lookup(local.gateway_map, route_item.gateway, ""))),
+          nat_gateway_id = (length(regexall("ngw", route_item.route_key)) > 0 ? lookup(var.ngw_ids, route_item.gateway, "") : null),
+          vpc_peering_connection_id = (length(regexall("peering", route_item.route_key)) > 0 ? lookup(var.vpc_peering_ids, route_item.gateway, "") : null)
         }
       ]
     ]
