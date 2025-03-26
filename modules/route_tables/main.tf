@@ -57,19 +57,20 @@
 
 
 locals {
-    # igw_ids와 ngw_ids만 merge하여 gateway_map 생성 (vpc_peering_ids는 별도 처리)
+  # igw_ids와 ngw_ids만 merge하여 gateway_map 생성 (vpc_peering_ids는 별도 처리)
   gateway_map = merge(var.igw_ids, var.ngw_ids)
 
-  # 각 route table의 각 routes 항목에 대해 ip_lists 파일을 읽어 destination CIDR 블록을 파싱하고,
-  # 지정된 gateway 값(키)를 local.gateway_map 에서 lookup 하여 gateway_id 를 할당합니다.
+  # 각 route table의 routes 항목마다 ip_lists 파일을 읽어 destination CIDR 블록을 파싱하고,
+  # route_item.route_key에 "peering" 문자열이 포함되면 vpc_peering_connection_id를 사용하고,
+  # 그렇지 않으면 gateway_map에서 gateway_id를 lookup 합니다.
   parsed_routes = flatten([
     for rt_key, rt in var.route_tables : [
       for route_item in rt.routes : [
         for line in split("\n", trimspace(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
           route_table_key           = rt_key,
           destination_cidr_block    = trimspace(line),
-          gateway_id                = contains(route_item.route_key, "peering") ? null : lookup(local.gateway_map, route_item.gateway, ""),
-          vpc_peering_connection_id = contains(route_item.route_key, "peering") ? lookup(var.vpc_peering_ids, route_item.gateway, "") : null
+          gateway_id                = length(regexall("peering", route_item.route_key)) > 0 ? null : lookup(local.gateway_map, route_item.gateway, ""),
+          vpc_peering_connection_id = length(regexall("peering", route_item.route_key)) > 0 ? lookup(var.vpc_peering_ids, route_item.gateway, "") : null
         }
       ]
     ]
