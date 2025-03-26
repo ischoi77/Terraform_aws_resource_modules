@@ -51,9 +51,10 @@ resource "aws_nat_gateway" "this" {
   # public NAT Gateway의 경우 allocation_id가 필요합니다.
   # CSV에 값이 있으면 해당 allocation_id를 사용하고,
   # 값이 비어있으면 생성한 EIP의 allocation_id를 사용합니다.
-  allocation_id = aws_eip.this[each.key].allocation_id
-
-
+  allocation_id = each.value.public ? (
+    each.value.allocation_id != "" ? each.value.allocation_id : data.aws_eip.natgw_eip_lookup[each.key].allocation_id
+  ) : null
+  
   tags = merge(
     var.common_tags,
     { Name = each.value.nat_gateway_name }
@@ -61,4 +62,16 @@ resource "aws_nat_gateway" "this" {
 
   # NAT Gateway 생성 시, EIP가 필요한 경우 해당 EIP 리소스 생성이 완료된 후에 진행하도록 의존성을 설정합니다.
   depends_on = [aws_eip.this]
+}
+
+data "aws_eip" "natgw_eip_lookup" {
+  for_each = local.nat_gateways_eip_required
+
+  filter {
+    name   = "tag:Name"
+    values = ["${each.key}-eip"]
+  }
+
+  # EIP 리소스가 생성된 이후에 조회하도록 명시
+  depends_on = [aws_eip.natgw_eip]
 }
