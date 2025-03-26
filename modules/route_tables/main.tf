@@ -65,7 +65,7 @@ locals {
   parsed_routes = flatten([
     for rt_key, rt in var.route_tables : [
       for route_item in rt.routes : [
-        for line in split("\n", trim(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
+        for line in split("\n", trimspace(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
           route_table_key        = rt_key,
           destination_cidr_block = trim(line),
           gateway_id             = lookup(local.gateway_map, route_item.gateway, "")
