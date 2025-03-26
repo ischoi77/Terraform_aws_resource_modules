@@ -41,3 +41,16 @@ resource "aws_vpc_dhcp_options" "this" {
   domain_name_servers = ["169.254.169.253"]
   domain_name         = "ap-northeast-1.compute.internal"
 }
+
+
+# IGW 생성 (각 VPC별 igw_create 값에 따라 생성)
+resource "aws_internet_gateway" "igw" {
+  for_each = { for key, vpc in var.vpcs : key => vpc if vpc.igw_create }
+
+  vpc_id = aws_vpc.this[each.key].id
+
+  tags = merge(
+    var.common_tags,
+    { "Name" = "${each.key}-igw" }
+  )
+}

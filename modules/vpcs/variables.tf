@@ -13,6 +13,7 @@ variable "vpcs" {
   type = map(object({
     cidr_block       = string
     additional_cidrs = list(string)  # 추가 CIDR 블록 목록 (없으면 빈 리스트)
+    igw_create = optional(bool, false) # 기본적으로 IGW 미생성
     tags             = map(string)
   }))
 }
