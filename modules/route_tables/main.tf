@@ -109,8 +109,12 @@ resource "aws_route" "this" {
 
   route_table_id         = aws_route_table.this[each.value.route_table_key].id
   destination_cidr_block = each.value.destination_cidr_block
+
+  # 조건에 따라 gateway_id 또는 vpc_peering_connection_id를 사용
   gateway_id             = each.value.gateway_id
+  vpc_peering_connection_id = each.value.vpc_peering_connection_id
 }
+
 
 # 서브넷 연결 정보를 담은 로컬 변수를 이용하여 aws_route_table_association 리소스를 생성
 resource "aws_route_table_association" "this" {
