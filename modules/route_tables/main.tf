@@ -55,27 +55,27 @@
 #   subnet_id      = each.value.subnet_id
 # }
 
-
 locals {
-  # igw_ids와 ngw_ids만 merge하여 gateway_map 생성 (vpc_peering_ids는 별도 처리)
-  gateway_map = merge(var.igw_ids, var.ngw_ids)
+  # igw_ids만 merge하여 기본 gateway_map 생성 (vpc_peering_ids와 ngw_ids는 별도 처리)
+  gateway_map = var.igw_ids
 
-  # 각 route table의 routes 항목마다 ip_lists 파일을 읽어 destination CIDR 블록을 파싱하고,
-  # route_item.route_key에 "peering" 문자열이 포함되면 vpc_peering_connection_id를 사용하고,
-  # 그렇지 않으면 gateway_map에서 gateway_id를 lookup 합니다.
   parsed_routes = flatten([
     for rt_key, rt in var.route_tables : [
       for route_item in rt.routes : [
         for line in split("\n", trimspace(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
           route_table_key           = rt_key,
           destination_cidr_block    = trimspace(line),
-          gateway_id                = length(regexall("peering", route_item.route_key)) > 0 ? null : lookup(local.gateway_map, route_item.gateway, ""),
-          vpc_peering_connection_id = length(regexall("peering", route_item.route_key)) > 0 ? lookup(var.vpc_peering_ids, route_item.gateway, "") : null
+          gateway_id = length(regexall("peering", route_item.route_key)) > 0 ? null :
+                       length(regexall("ngw", route_item.route_key)) > 0 ? null :
+                       lookup(local.gateway_map, route_item.gateway, ""),
+          nat_gateway_id = length(regexall("ngw", route_item.route_key)) > 0 ?
+                           lookup(var.ngw_ids, route_item.gateway, "") : null,
+          vpc_peering_connection_id = length(regexall("peering", route_item.route_key)) > 0 ?
+                                      lookup(var.vpc_peering_ids, route_item.gateway, "") : null
         }
       ]
     ]
   ])
-
 
   # 각 route table에 대한 서브넷 연결 정보를 생성하기 위해,
   # var.route_tables의 각 서브넷 이름을 외부 모듈의 subnet_ids map에서 lookup 하여 고유한 key를 부여합니다.
@@ -110,8 +110,8 @@ resource "aws_route" "this" {
   route_table_id         = aws_route_table.this[each.value.route_table_key].id
   destination_cidr_block = each.value.destination_cidr_block
 
-  # 조건에 따라 gateway_id 또는 vpc_peering_connection_id를 사용
-  gateway_id             = each.value.gateway_id
+  gateway_id                = each.value.gateway_id
+  nat_gateway_id            = each.value.nat_gateway_id
   vpc_peering_connection_id = each.value.vpc_peering_connection_id
 }
 
