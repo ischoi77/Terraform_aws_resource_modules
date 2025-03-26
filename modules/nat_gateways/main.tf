@@ -52,7 +52,7 @@ resource "aws_nat_gateway" "this" {
   # CSV에 값이 있으면 해당 allocation_id를 사용하고,
   # 값이 비어있으면 생성한 EIP의 allocation_id를 사용합니다.
   allocation_id = each.value.public ? (
-    each.value.allocation_id != "" ? each.value.allocation_id : data.aws_eip.natgw_eip_lookup[each.key].allocation_id
+    each.value.allocation_id != "" ? each.value.allocation_id : data.aws_eip.natgw_eip_lookup[each.key].id
   ) : null
 
   tags = merge(
