@@ -57,8 +57,8 @@
 
 
 locals {
-  # 외부 모듈에서 전달받은 igw_ids, ngw_ids, vpc_peering_ids 를 통합하여 gateway_map 을 생성합니다.
-  gateway_map = merge(var.igw_ids, var.ngw_ids, var.vpc_peering_ids)
+    # igw_ids와 ngw_ids만 merge하여 gateway_map 생성 (vpc_peering_ids는 별도 처리)
+  gateway_map = merge(var.igw_ids, var.ngw_ids)
 
   # 각 route table의 각 routes 항목에 대해 ip_lists 파일을 읽어 destination CIDR 블록을 파싱하고,
   # 지정된 gateway 값(키)를 local.gateway_map 에서 lookup 하여 gateway_id 를 할당합니다.
@@ -66,13 +66,15 @@ locals {
     for rt_key, rt in var.route_tables : [
       for route_item in rt.routes : [
         for line in split("\n", trimspace(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
-          route_table_key        = rt_key,
-          destination_cidr_block = trimspace(line),
-          gateway_id             = lookup(local.gateway_map, route_item.gateway, "")
+          route_table_key           = rt_key,
+          destination_cidr_block    = trimspace(line),
+          gateway_id                = contains(route_item.route_key, "peering") ? null : lookup(local.gateway_map, route_item.gateway, ""),
+          vpc_peering_connection_id = contains(route_item.route_key, "peering") ? lookup(var.vpc_peering_ids, route_item.gateway, "") : null
         }
       ]
     ]
   ])
+
 
   # 각 route table에 대한 서브넷 연결 정보를 생성하기 위해,
   # var.route_tables의 각 서브넷 이름을 외부 모듈의 subnet_ids map에서 lookup 하여 고유한 key를 부여합니다.
