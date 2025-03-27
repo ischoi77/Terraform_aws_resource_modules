@@ -23,6 +23,9 @@ locals {
       }
     ]
   ])
+
+   // 중복된 rule_id가 있을 경우 그룹화하여 각 그룹의 첫 번째 항목만 사용
+  unique_sg_rules = { for k, v in { for r in local.sg_rules_flat : r.rule_id => r ... } : k => v[0] }
     // 동일 모듈 내에서 생성한 Security Group 의 SG_ID lookup mapping 생성  
   // 키는 "<vpc_id>_<SG_Name>" 형식으로 생성
   sg_lookup = {
@@ -47,7 +50,7 @@ resource "aws_security_group" "this" {
 }
 
 resource "aws_security_group_rule" "this" {
-  for_each = { for r in local.sg_rules_flat : r.rule_id => r }
+  for_each = local.unique_sg_rules
 
   security_group_id = aws_security_group.this[each.value.sg_key].id
 
