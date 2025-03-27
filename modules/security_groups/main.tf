@@ -15,11 +15,11 @@ locals {
   }
   sg_rules_flat = flatten([
     for sg_key, sg in local.sg_data : [
-      for idx, rule in sg.rules : {
-        sg_key = sg_key
-        idx    = idx
-        rule   = rule
-        rule_id = "${sg.sg_name}-${md5("${sg_key}-${idx}-${rule.Direction}-${rule.Protocol}-${rule.Port}-${rule["SG_ID_or_CIDR"]}")}"
+      for rule in sg.rules : {
+        sg_key  = sg_key
+        rule    = rule
+        // idx 없이 rule_id 생성: sg_name과 나머지 속성으로 고유 식별자 생성
+        rule_id = "${sg.sg_name}-${md5("${sg_key}-${rule.Direction}-${rule.Protocol}-${rule.Port}-${rule["SG_ID_or_CIDR"]}")}"
       }
     ]
   ])
