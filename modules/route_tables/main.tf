@@ -103,7 +103,7 @@ resource "aws_route" "this" {
   for_each = {
     for route in local.parsed_routes :
     md5(
-      "${route.route_table_key}|${route.destination_cidr_block}|${coalesce(route.gateway_id, "")}|${coalesce(route.nat_gateway_id, "")}|${coalesce(route.vpc_peering_connection_id, "")}"
+      "${route.route_table_key}|${route.destination_cidr_block}|${(route.gateway_id != null ? route.gateway_id : "")}|${(route.nat_gateway_id != null ? route.nat_gateway_id : "")}|${(route.vpc_peering_connection_id != null ? route.vpc_peering_connection_id : "")}"
     ) => route
   }
 
