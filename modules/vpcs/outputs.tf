@@ -12,5 +12,5 @@ output "vpc_ipv4_cidr_association_ids" {
 
 output "igw_ids" {
   description = "생성된 Internet Gateway ID 목록 (key: VPC 이름). igw_create가 false인 경우 해당 VPC는 제외됩니다."
-  value       = { for key, igw in aws_internet_gateway.igw : key => igw.id }
+  value       = { for key, igw in aws_internet_gateway.igw : replace(key, "vpc", "igw") => igw.id }
 }

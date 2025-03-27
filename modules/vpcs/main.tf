@@ -26,6 +26,7 @@ locals {
       }
     ]
   ])
+  vpcs_with_dhcp = { for key, vpc in var.vpcs : key => vpc if vpc.dhcp_options != null }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "this" {
@@ -37,12 +38,23 @@ resource "aws_vpc_ipv4_cidr_block_association" "this" {
 
 
 resource "aws_vpc_dhcp_options" "this" {
-  for_each = var.vpcs
-  # domain_name_servers = ["8.8.8.8"]
-  domain_name_servers = each.value.dhcp_domain_name_servers
-  domain_name         = each.value.dhcp_domain_name
+  for_each = local.vpcs_with_dhcp
+
+  domain_name          = each.value.dhcp_options.domain_name
+  domain_name_servers  = each.value.dhcp_options.domain_name_servers
+  ntp_servers          = each.value.dhcp_options.ntp_servers
+  netbios_name_servers = each.value.dhcp_options.netbios_name_servers
+  netbios_node_type    = each.value.dhcp_options.netbios_node_type
+
 }
 
+
+resource "aws_vpc_dhcp_options_association" "this" {
+  for_each = local.vpcs_with_dhcp
+
+  vpc_id           = aws_vpc.this[each.key].id
+  dhcp_options_id  = aws_vpc_dhcp_options.this[each.key].id
+}
 
 # IGW 생성 (각 VPC별 igw_create 값에 따라 생성)
 resource "aws_internet_gateway" "igw" {
@@ -52,6 +64,6 @@ resource "aws_internet_gateway" "igw" {
 
   tags = merge(
     var.common_tags,
-    { "Name" = "${each.key}-igw" }
+    { "Name" = replace(each.key, "vpc", "igw") }
   )
 }
