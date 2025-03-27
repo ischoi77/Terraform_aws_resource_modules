@@ -1,6 +1,6 @@
 locals {
   # 모듈 루트 하위의 vpc_sg_rules 폴더 내 모든 CSV 파일 검색
-  sg_rule_files = fileset("${path.module}/vpc_sg_rules", "**/*.csv")
+  sg_rule_files = fileset("${path.root}/vpc_sg_rules", "**/*.csv")
 
   # 각 CSV 파일의 경로 정보를 파싱하여 보안그룹 데이터 생성
   sg_data = {
