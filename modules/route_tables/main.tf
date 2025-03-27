@@ -102,9 +102,11 @@ resource "aws_route_table" "this" {
 resource "aws_route" "this" {
   for_each = {
     for route in local.parsed_routes :
-    md5("${route.route_table_key}|${route.destination_cidr_block}|${route.gateway_id}|${route.nat_gateway_id}|${route.vpc_peering_connection_id}") => route
+    md5(
+      "${route.route_table_key}|${route.destination_cidr_block}|${coalesce(route.gateway_id, "")}|${coalesce(route.nat_gateway_id, "")}|${coalesce(route.vpc_peering_connection_id, "")}"
+    ) => route
   }
-  
+
   route_table_id         = aws_route_table.this[each.value.route_table_key].id
   destination_cidr_block = each.value.destination_cidr_block
 
