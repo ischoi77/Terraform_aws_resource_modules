@@ -37,9 +37,10 @@ resource "aws_vpc_ipv4_cidr_block_association" "this" {
 
 
 resource "aws_vpc_dhcp_options" "this" {
+  for_each = var.vpcs
   # domain_name_servers = ["8.8.8.8"]
-  domain_name_servers = ["169.254.169.253"]
-  domain_name         = "ap-northeast-1.compute.internal"
+  domain_name_servers = each.value.dhcp_domain_name_servers
+  domain_name         = each.value.dhcp_domain_name
 }
 
 

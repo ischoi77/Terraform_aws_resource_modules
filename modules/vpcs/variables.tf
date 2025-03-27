@@ -9,10 +9,12 @@ variable "common_tags" {
 }
 
 variable "vpcs" {
-  description = "VPC 생성 정보를 담은 map(object). 각 key는 VPC 이름"
+  description = "VPC 생성 정보를 담은 map(object)"
   type = map(object({
     cidr_block       = string
-    additional_cidrs = list(string)  # 추가 CIDR 블록 목록 (없으면 빈 리스트)
+    dhcp_domain_name_servers = list(string)
+    dhcp_domain_name         = string
+    additional_cidrs = list(string)
     igw_create = optional(bool, false) # 기본적으로 IGW 미생성
     tags             = map(string)
   }))
