@@ -13,6 +13,16 @@ locals {
       rules   = csvdecode(file("${path.root}/vpc_sg_rules/${file_path}"))
     }
   }
+  sg_rules_flat = flatten([
+    for sg_key, sg in local.sg_data : [
+      for idx, rule in sg.rules : {
+        sg_key = sg_key
+        idx    = idx
+        rule   = rule
+        rule_id = "${sg.sg_name}-${md5("${sg_key}-${idx}-${rule.Direction}-${rule.Protocol}-${rule.Port}-${rule["SG_ID_or_CIDR"]}")}"
+      }
+    ]
+  ])
 }
 
 resource "aws_security_group" "this" {
@@ -29,23 +39,6 @@ resource "aws_security_group" "this" {
     }
   )
 }
-
-locals {
-  sg_rules_flat = flatten([
-    for sg_key, sg in local.sg_data : [
-      for idx, rule in sg.rules : {
-        sg_key = sg_key
-        idx    = idx
-        rule   = rule
-        // Rule_Description 항목을 제외하고, SG_ID_or_CIDR 키를 사용하여 md5 해시를 생성합니다.
-        rule_id = md5(
-          "${sg_key}-${idx}-${rule.Direction}-${rule.Protocol}-${rule.Port}-${rule["SG_ID_or_CIDR"]}"
-        )
-      }
-    ]
-  ])
-}
-
 
 resource "aws_security_group_rule" "this" {
   for_each = { for r in local.sg_rules_flat : r.rule_id => r }
