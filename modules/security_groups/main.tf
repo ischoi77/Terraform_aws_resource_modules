@@ -69,22 +69,24 @@ resource "aws_security_group_rule" "this" {
   )
 
   // SG_ID_or_CIDR 필드 처리: "/" 포함 여부에 따라 CIDR 또는 SG ID로 설정
-  // SG_ID_or_CIDR 처리:
-  // 1. "/" 포함 → CIDR 블록 사용하고, source_security_group_id는 null 처리
-  // 2. "/" 미포함 → 값이 "<sg->" 형식이면 그대로 사용, 그렇지 않으면 SG_Name으로 간주하여 lookup 수행
   cidr_blocks = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? [each.value.rule["SG_ID_or_CIDR"]] : null
 
-  source_security_group_id = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null :
+  // SG_ID_or_CIDR 필드 처리:
+  // 1. "/"가 포함되어 있으면 CIDR로 처리.
+  // 2. 그렇지 않은 경우, 값이 "<sg->"로 시작하면 그대로 사용,
+  // 3. 그렇지 않으면 해당 값을 SG_Name으로 간주하여 local.sg_lookup에서 SG_ID를 조회.
+  source_security_group_id = (
+    length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null :
     (
-      startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ?
-        each.value.rule["SG_ID_or_CIDR"] :
-        lookup(
-          local.sg_lookup,
-          format("%s_%s", lookup(var.vpc_ids, local.sg_data[each.value.sg_key].vpc), each.value.rule["SG_ID_or_CIDR"]),
-          null
-        )
+      startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ? each.value.rule["SG_ID_or_CIDR"] :
+      lookup(
+        local.sg_lookup,
+        format("%s_%s", lookup(var.vpc_ids, local.sg_data[each.value.sg_key].vpc), each.value.rule["SG_ID_or_CIDR"]),
+        null
+      )
     )
-    
+  )
+
   // Rule_Description 항목이 비어있을 경우 빈 문자열로 처리
   description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
