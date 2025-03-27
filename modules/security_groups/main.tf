@@ -10,7 +10,7 @@ locals {
     "${element(split("/", file_path), 0)}_${replace(element(split("/", file_path), 1), ".csv", "")}" => {
       vpc     = element(split("/", file_path), 0)
       sg_name = replace(element(split("/", file_path), 1), ".csv", "")
-      rules   = csvdecode(file("${path.module}/vpc_sg_rules/${file_path}"))
+      rules   = csvdecode(file("${path.root}/vpc_sg_rules/${file_path}"))
     }
   }
 }
