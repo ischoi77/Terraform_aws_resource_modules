@@ -47,18 +47,32 @@ locals {
 }
 
 
-
 resource "aws_security_group_rule" "this" {
   for_each = { for r in local.sg_rules_flat : r.rule_id => r }
 
   security_group_id = aws_security_group.this[each.value.sg_key].id
-  type              = lower(each.value.rule.Direction)  # "ingress" 또는 "egress"
-  protocol          = each.value.rule.Protocol
-  from_port         = tonumber(each.value.rule.Port)
-  to_port           = tonumber(each.value.rule.Port)
 
+  // Direction: inbound => ingress, outbound => egress
+  type     = lower(each.value.rule.Direction) == "inbound" ? "ingress" : "egress"
+  protocol = each.value.rule.Protocol
+
+  // Port 처리: 단일 값 또는 범위(예: "8000-8080") 구분
+  from_port = (
+    length(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)) > 0 ?
+    tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 0)) :
+    tonumber(each.value.rule.Port)
+  )
+
+  to_port = (
+    length(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)) > 0 ?
+    tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 1)) :
+    tonumber(each.value.rule.Port)
+  )
+
+  // SG_ID_or_CIDR 필드 처리: "/" 포함 여부에 따라 CIDR 또는 SG ID로 설정
   cidr_blocks = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? [each.value.rule["SG_ID_or_CIDR"]] : []
   source_security_group_id = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null : each.value.rule["SG_ID_or_CIDR"]
 
-  description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+  // Rule_Description 항목이 비어있을 경우 빈 문자열로 처리
+  description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
