@@ -23,6 +23,12 @@ locals {
       }
     ]
   ])
+    // 동일 모듈 내에서 생성한 Security Group 의 SG_ID lookup mapping 생성  
+  // 키는 "<vpc_id>_<SG_Name>" 형식으로 생성
+  sg_lookup = {
+    for sg_key, sg in local.sg_data :
+    "${lookup(var.vpc_ids, sg.vpc)}_${sg.sg_name}" => aws_security_group.this[sg_key].id
+  }
 }
 
 resource "aws_security_group" "this" {
@@ -64,7 +70,22 @@ resource "aws_security_group_rule" "this" {
 
   // SG_ID_or_CIDR 필드 처리: "/" 포함 여부에 따라 CIDR 또는 SG ID로 설정
   cidr_blocks = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? [each.value.rule["SG_ID_or_CIDR"]] : []
-  source_security_group_id = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null : each.value.rule["SG_ID_or_CIDR"]
+
+  // SG_ID_or_CIDR 필드 처리:
+  // 1. "/"가 포함되어 있으면 CIDR로 처리.
+  // 2. 그렇지 않은 경우, 값이 "<sg->"로 시작하면 그대로 사용,
+  // 3. 그렇지 않으면 해당 값을 SG_Name으로 간주하여 local.sg_lookup에서 SG_ID를 조회.
+  source_security_group_id = (
+    length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null :
+    (
+      startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ? each.value.rule["SG_ID_or_CIDR"] :
+      lookup(
+        local.sg_lookup,
+        format("%s_%s", lookup(var.vpc_ids, local.sg_data[each.value.sg_key].vpc), each.value.rule["SG_ID_or_CIDR"]),
+        null
+      )
+    )
+  )
 
   // Rule_Description 항목이 비어있을 경우 빈 문자열로 처리
   description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
