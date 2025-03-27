@@ -74,5 +74,5 @@ resource "aws_security_group_rule" "this" {
   source_security_group_id = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null : each.value.rule["SG_ID_or_CIDR"]
 
   // Rule_Description 항목이 비어있을 경우 빈 문자열로 처리
-  description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+  description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
