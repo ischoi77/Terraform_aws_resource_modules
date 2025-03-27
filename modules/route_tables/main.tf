@@ -100,8 +100,11 @@ resource "aws_route_table" "this" {
 
 # ip_lists 파일의 각 라인마다 aws_route 리소스를 생성
 resource "aws_route" "this" {
-  for_each = { for idx, route in local.parsed_routes : "${route.route_table_key}-${idx}" => route }
-
+  for_each = {
+    for route in local.parsed_routes :
+    md5("${route.route_table_key}|${route.destination_cidr_block}|${route.gateway_id}|${route.nat_gateway_id}|${route.vpc_peering_connection_id}") => route
+  }
+  
   route_table_id         = aws_route_table.this[each.value.route_table_key].id
   destination_cidr_block = each.value.destination_cidr_block
 
