@@ -1,9 +1,3 @@
-/*
-Title: SPCv2 Subnet module
-Author: Inseok-Choi
-contect: is25.choi@partner.samsung.com, ischoi.scloud@gmail.com
-
-*/
 
 locals {
   # 각 VPC별 CSV 파일을 읽어 파싱하여 VPC별 서브넷 리스트를 생성

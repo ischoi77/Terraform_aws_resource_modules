@@ -1,10 +1,3 @@
-/*
-Title: SPCv2 VPC module
-Author: Inseok-Choi
-contect: is25.choi@partner.samsung.com, ischoi.scloud@gmail.com
-
-*/
-
 
 resource "aws_vpc" "this" {
   for_each = var.vpcs

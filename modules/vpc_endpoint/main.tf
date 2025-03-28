@@ -1,9 +1,3 @@
-/*
-Title: SPCv2 VPC_ENDPOINT module
-Author: Inseok-Choi
-contect: is25.choi@partner.samsung.com, ischoi.scloud@gmail.com
-
-*/
 
 resource "aws_vpc_endpoint" "this" {
   for_each = var.vpc_endpoints
