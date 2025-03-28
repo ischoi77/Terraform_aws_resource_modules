@@ -8,3 +8,6 @@ terraform {
 
   }
 }
+
+
+#source = "git::https://github.com/ischoi77/spcv2.git//modules/<리소스>"
