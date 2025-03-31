@@ -13,7 +13,7 @@ variable "vpc_endpoints" {
     생성할 VPC Endpoint 정보를 담은 map(object) 변수입니다.
     각 key는 엔드포인트 이름(예: "s3-endpoint")로 사용되며,
     value 객체는 아래 속성들을 포함합니다.
-      - vpc_id              : string, 엔드포인트가 생성될 VPC의 ID
+      - vpc_name             : string, 엔드포인트가 생성될 VPC의 이름 var.vpc_ids 에서 이름으로 조회
       - service_name        : string, 서비스 이름 (예: "com.amazonaws.us-west-2.s3")
       - vpc_endpoint_type   : string, 엔드포인트 유형 ("Gateway", "Interface", 또는 "GatewayLoadBalancer")
       - route_table_names   : (옵션, Gateway 유형) list(string), 사용할 라우트 테이블 이름 리스트
@@ -24,14 +24,14 @@ variable "vpc_endpoints" {
       - tags                : map(string), 엔드포인트에 추가로 적용할 태그
   EOT
   type = map(object({
-    vpc_name              = string
-    service_name        = string
-    vpc_endpoint_type   = string
-    route_table_names   = optional(list(string))
-    subnet_names        = optional(list(string))
-    security_group_names= optional(list(string))
-    private_dns_enabled = optional(bool, false)
-    tags                = map(string)
+    vpc_name             = string
+    service_name         = string
+    vpc_endpoint_type    = string
+    route_table_names    = optional(list(string))
+    subnet_names         = optional(list(string))
+    security_group_names = optional(list(string))
+    private_dns_enabled  = optional(bool, false)
+    tags                 = map(string)
   }))
 }
 
