@@ -9,21 +9,21 @@ resource "aws_vpc_endpoint" "this" {
   # Gateway 엔드포인트: route_table_names 사용
   route_table_ids = each.value.vpc_endpoint_type == "Gateway" ? (
     lookup(each.value, "route_table_names", []) != [] ?
-      [ for rt_name in each.value.route_table_names : var.route_table_map[route_table_names] ]
+      [ for rt_name in each.value.route_table_names : var.route_table_map[each.value.route_table_names] ]
       : null
   ) : null
 
   # Interface 엔드포인트: subnet_names 사용
   subnet_ids = each.value.vpc_endpoint_type == "Interface" ? (
     lookup(each.value, "subnet_names", []) != [] ?
-      [ for subnet_name in each.value.subnet_names : var.subnet_map[subnet_names] ]
+      [ for subnet_name in each.value.subnet_names : var.subnet_map[each.value.subnet_names] ]
       : null
   ) : null
 
   # Interface 엔드포인트: 옵션으로 security_group_names 사용 (값이 없으면 null 처리)
   security_group_ids = each.value.vpc_endpoint_type == "Interface" ? (
     lookup(each.value, "security_group_names", []) != [] ?
-      [ for sg_name in each.value.security_group_names : var.security_group_map[security_group_names] ]
+      [ for sg_name in each.value.security_group_names : var.security_group_map[each.value.security_group_names] ]
       : null
   ) : null
 
