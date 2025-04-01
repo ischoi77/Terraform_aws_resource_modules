@@ -32,6 +32,7 @@ locals {
 
 
 
+
 resource "aws_vpc_endpoint" "this" {
   for_each = local.processed_endpoints
 
