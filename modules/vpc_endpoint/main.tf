@@ -6,20 +6,20 @@ locals {
       vpc_endpoint_type = ep.vpc_endpoint_type
 
       route_table_ids = ep.vpc_endpoint_type == "Gateway" ? (
-        length(lookup(ep, "route_table_names", [])) > 0 ?
-          [ for rt in lookup(ep, "route_table_names", []) : lookup(var.route_table_map, rt, null) if lookup(var.route_table_map, rt, null) != null ]
+        length(coalesce(lookup(ep, "route_table_names", []), [])) > 0 ?
+          [ for rt in coalesce(lookup(ep, "route_table_names", []), []) : lookup(var.route_table_map, rt, null) if lookup(var.route_table_map, rt, null) != null ]
           : null
       ) : null
 
       subnet_ids = ep.vpc_endpoint_type == "Interface" ? (
-        length(lookup(ep, "subnet_names", [])) > 0 ?
-          [ for sn in lookup(ep, "subnet_names", []) : lookup(var.subnet_map, sn, null) if lookup(var.subnet_map, sn, null) != null ]
+        length(coalesce(lookup(ep, "subnet_names", []), [])) > 0 ?
+          [ for sn in coalesce(lookup(ep, "subnet_names", []), []) : lookup(var.subnet_map, sn, null) if lookup(var.subnet_map, sn, null) != null ]
           : null
       ) : null
 
       security_group_ids = ep.vpc_endpoint_type == "Interface" ? (
-        length(lookup(ep, "security_group_names", [])) > 0 ?
-          [ for sg in lookup(ep, "security_group_names", []) : lookup(var.security_group_map, sg, null) if lookup(var.security_group_map, sg, null) != null ]
+        length(coalesce(lookup(ep, "security_group_names", []), [])) > 0 ?
+          [ for sg in coalesce(lookup(ep, "security_group_names", []), []) : lookup(var.security_group_map, sg, null) if lookup(var.security_group_map, sg, null) != null ]
           : null
       ) : null
 
@@ -29,6 +29,7 @@ locals {
     }
   }
 }
+
 
 
 
