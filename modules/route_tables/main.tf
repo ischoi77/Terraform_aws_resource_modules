@@ -67,6 +67,7 @@ resource "aws_route" "this" {
   gateway_id                = each.value.gateway_id
   nat_gateway_id            = each.value.nat_gateway_id
   vpc_peering_connection_id = each.value.vpc_peering_connection_id
+  depends_on = [ aws_route_table.this ]
 }
 
 
