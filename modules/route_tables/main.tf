@@ -3,10 +3,10 @@ locals {
 
   parsed_routes = flatten([
     for rt_key, rt in var.route_tables : [
-      for route_item in rt.routes : [
-        // "for line_idx, line in ..." 구문은 파일의 각 줄에 대해 인덱스(line_idx)도 함께 가져옵니다.
+      for route_item_idx, route_item in rt.routes : [
         for line_idx, line in split("\n", trimspace(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
           route_table_key           = rt_key,
+          route_item_index          = route_item_idx,       // route 항목 인덱스 추가
           line_index                = line_idx,
           destination_cidr_block    = trimspace(line),
           gateway_id = (
@@ -56,9 +56,9 @@ resource "aws_route_table" "this" {
 
 # ip_lists 파일의 각 라인마다 aws_route 리소스를 생성
 resource "aws_route" "this" {
-  for_each = {
-    for route in local.parsed_routes :
-      "${route.route_table_key}-${route.line_index}" => route
+  for_each = { 
+    for route in local.parsed_routes : 
+      "${route.route_table_key}-${route.route_item_index}-${route.line_index}" => route
   }
     # md5(
     #   "${route.route_table_key}|${route.destination_cidr_block}|${(route.gateway_id != null ? route.gateway_id : "")}|${(route.nat_gateway_id != null ? route.nat_gateway_id : "")}|${(route.vpc_peering_connection_id != null ? route.vpc_peering_connection_id : "")}"
@@ -71,7 +71,6 @@ resource "aws_route" "this" {
   gateway_id                = each.value.gateway_id
   nat_gateway_id            = each.value.nat_gateway_id
   vpc_peering_connection_id = each.value.vpc_peering_connection_id
-  depends_on = [ aws_route_table.this ]
 }
 
 
