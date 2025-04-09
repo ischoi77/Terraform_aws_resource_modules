@@ -29,10 +29,11 @@ locals {
   # var.route_tables의 각 서브넷 이름을 외부 모듈의 subnet_ids map에서 lookup 하여 고유한 key를 부여합니다.
   route_table_associations = flatten([
     for rt_key, rt in var.route_tables : [
-      for idx, subnet_name in rt.subnets : {
-        key             = "${rt_key}-${idx}"
-        route_table_id  = aws_route_table.this[rt_key].id
-        subnet_id       = lookup(var.subnet_ids, subnet_name, "")
+      for subnet_name in rt.subnets : {
+        # 여기서는 입력 변수에 기반한 rt_key와 subnet_name을 키로 사용합니다.
+        key            = "${rt_key}-${subnet_name}",
+        route_table_key = rt_key,
+        subnet_name    = subnet_name
       }
     ]
   ])
@@ -74,6 +75,6 @@ resource "aws_route" "this" {
 resource "aws_route_table_association" "this" {
   for_each = { for assoc in local.route_table_associations : assoc.key => assoc }
 
-  route_table_id = each.value.route_table_id
-  subnet_id      = each.value.subnet_id
+  route_table_id = aws_route_table.this[each.value.route_table_key].id
+  subnet_id      = lookup(var.subnet_ids, each.value.subnet_name, "")
 }
