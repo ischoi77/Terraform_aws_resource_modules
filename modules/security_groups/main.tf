@@ -115,7 +115,7 @@ resource "aws_security_group_rule" "self" {
   )
 
   self        = true
-  description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+  description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
 
 ///////////////////////////////////////////
@@ -143,5 +143,5 @@ resource "aws_security_group_rule" "this" {
   cidr_blocks              = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? [each.value.rule["SG_ID_or_CIDR"]] : null
   source_security_group_id = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null : (startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ? each.value.rule["SG_ID_or_CIDR"] : lookup(local.sg_lookup, each.value.rule["SG_ID_or_CIDR"], null))
 
-  description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+  description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
