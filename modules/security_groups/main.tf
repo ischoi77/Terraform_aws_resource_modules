@@ -34,20 +34,20 @@ locals {
   }
 }
 
-# resource "aws_security_group" "this" {
-#   for_each = local.sg_data
+resource "aws_security_group" "this" {
+  for_each = local.sg_data
 
-#   name        = each.value.sg_name
-#   description = "Security Group for ${each.value.sg_name}"
-#   vpc_id      = lookup(var.vpc_ids, each.value.vpc)
+  name        = each.value.sg_name
+  description = "Security Group for ${each.value.sg_name}"
+  vpc_id      = lookup(var.vpc_ids, each.value.vpc)
 
-#   tags = merge(
-#     var.common_tags,
-#     {
-#       "Name" = each.value.sg_name
-#     }
-#   )
-# }
+  tags = merge(
+    var.common_tags,
+    {
+      "Name" = each.value.sg_name
+    }
+  )
+}
 
 # resource "aws_security_group_rule" "this" {
 #   for_each = local.unique_sg_rules
