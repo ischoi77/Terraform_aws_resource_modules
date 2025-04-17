@@ -121,7 +121,7 @@ resource "aws_security_group_rule" "self" {
 ///////////////////////////////////////////
 // 2) self 아닌 룰 처리 (CIDR / SG_ID / lookup)
 ///////////////////////////////////////////
-resource "aws_security_group_rule" "others" {
+resource "aws_security_group_rule" "this" {
   for_each = local.other_rules
 
   security_group_id = aws_security_group.this[each.value.sg_key].id
