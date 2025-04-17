@@ -70,7 +70,6 @@ resource "aws_security_group_rule" "this" {
     tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 1)) :
     tonumber(each.value.rule.Port)
   )
-  self = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? true : false
 
   // SG_ID_or_CIDR 처리:
   // 1. "/" 포함 → CIDR 블록 사용 (source_security_group_id는 null)
