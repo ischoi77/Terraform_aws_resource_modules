@@ -34,54 +34,114 @@ locals {
   }
 }
 
-resource "aws_security_group" "this" {
-  for_each = local.sg_data
+# resource "aws_security_group" "this" {
+#   for_each = local.sg_data
 
-  name        = each.value.sg_name
-  description = "Security Group for ${each.value.sg_name}"
-  vpc_id      = lookup(var.vpc_ids, each.value.vpc)
+#   name        = each.value.sg_name
+#   description = "Security Group for ${each.value.sg_name}"
+#   vpc_id      = lookup(var.vpc_ids, each.value.vpc)
 
-  tags = merge(
-    var.common_tags,
-    {
-      "Name" = each.value.sg_name
-    }
-  )
+#   tags = merge(
+#     var.common_tags,
+#     {
+#       "Name" = each.value.sg_name
+#     }
+#   )
+# }
+
+# resource "aws_security_group_rule" "this" {
+#   for_each = local.unique_sg_rules
+
+#   security_group_id = aws_security_group.this[each.value.sg_key].id
+
+#   // Direction: inbound => ingress, outbound => egress
+#   type     = lower(each.value.rule.Direction) == "inbound" ? "ingress" : "egress"
+#   protocol = each.value.rule.Protocol
+
+#   // Port 처리: 단일 값 또는 범위(예: "8000-8080") 구분
+#   from_port = (
+#     length(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)) > 0 ?
+#     tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 0)) :
+#     tonumber(each.value.rule.Port)
+#   )
+
+#   to_port = (
+#     length(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)) > 0 ?
+#     tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 1)) :
+#     tonumber(each.value.rule.Port)
+#   )
+#   self = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? true : false
+
+#   // SG_ID_or_CIDR 처리:
+#   // 1. "/" 포함 → CIDR 블록 사용 (source_security_group_id는 null)
+#   // 2. "/" 미포함 → 값이 "<sg->" 형식이면 그대로 사용,
+#   // 3. 그렇지 않으면 해당 값을 SG_Name으로 간주하여 lookup 수행 (VPC와 상관없이)
+#   // CIDR vs. SG_ID vs. self 처리 순서
+  # cidr_blocks = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? null : length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? [each.value.rule["SG_ID_or_CIDR"]] : null
+
+  # source_security_group_id = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? null : (length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null : (startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ? each.value.rule["SG_ID_or_CIDR"] : lookup(local.sg_lookup, each.value.rule["SG_ID_or_CIDR"], null)))
+
+
+#   // Rule_Description 항목이 비어있을 경우 빈 문자열로 처리
+#   description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+# }
+
+
+locals {
+  // 기존 unique_sg_rules 에서 self 룰과 비-self 룰 분리
+  self_rules  = { for id, r in local.unique_sg_rules : id => r if r.rule["SG_ID_or_CIDR"] == r.sg_key }
+  other_rules = { for id, r in local.unique_sg_rules : id => r if r.rule["SG_ID_or_CIDR"] != r.sg_key }
 }
 
-resource "aws_security_group_rule" "this" {
-  for_each = local.unique_sg_rules
+///////////////////////////////////////////
+// 1) self 룰만 처리
+///////////////////////////////////////////
+resource "aws_security_group_rule" "self" {
+  for_each = local.self_rules
 
   security_group_id = aws_security_group.this[each.value.sg_key].id
+  type              = lower(each.value.rule.Direction) == "inbound" ? "ingress" : "egress"
+  protocol          = each.value.rule.Protocol
 
-  // Direction: inbound => ingress, outbound => egress
-  type     = lower(each.value.rule.Direction) == "inbound" ? "ingress" : "egress"
-  protocol = each.value.rule.Protocol
-
-  // Port 처리: 단일 값 또는 범위(예: "8000-8080") 구분
   from_port = (
     length(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)) > 0 ?
     tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 0)) :
     tonumber(each.value.rule.Port)
   )
-
   to_port = (
     length(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)) > 0 ?
     tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 1)) :
     tonumber(each.value.rule.Port)
   )
-  self = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? true : false
 
-  // SG_ID_or_CIDR 처리:
-  // 1. "/" 포함 → CIDR 블록 사용 (source_security_group_id는 null)
-  // 2. "/" 미포함 → 값이 "<sg->" 형식이면 그대로 사용,
-  // 3. 그렇지 않으면 해당 값을 SG_Name으로 간주하여 lookup 수행 (VPC와 상관없이)
-  // CIDR vs. SG_ID vs. self 처리 순서
-  cidr_blocks = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? null : length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? [each.value.rule["SG_ID_or_CIDR"]] : null
+  self        = true
+  description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+}
 
-  source_security_group_id = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? null : (length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null : (startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ? each.value.rule["SG_ID_or_CIDR"] : lookup(local.sg_lookup, each.value.rule["SG_ID_or_CIDR"], null)))
+///////////////////////////////////////////
+// 2) self 아닌 룰 처리 (CIDR / SG_ID / lookup)
+///////////////////////////////////////////
+resource "aws_security_group_rule" "others" {
+  for_each = local.other_rules
 
+  security_group_id = aws_security_group.this[each.value.sg_key].id
+  type              = lower(each.value.rule.Direction) == "inbound" ? "ingress" : "egress"
+  protocol          = each.value.rule.Protocol
 
-  // Rule_Description 항목이 비어있을 경우 빈 문자열로 처리
-  description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+  from_port = (
+    length(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)) > 0 ?
+    tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 0)) :
+    tonumber(each.value.rule.Port)
+  )
+  to_port = (
+    length(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)) > 0 ?
+    tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 1)) :
+    tonumber(each.value.rule.Port)
+  )
+
+  // CIDR vs. SG_ID vs. lookup
+  cidr_blocks              = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? [each.value.rule["SG_ID_or_CIDR"]] : null
+  source_security_group_id = length(regexall("/", each.value.rule["SG_ID_or_CIDR"])) > 0 ? null : (startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ? each.value.rule["SG_ID_or_CIDR"] : lookup(local.sg_lookup, each.value.rule["SG_ID_or_CIDR"], null))
+
+  description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
