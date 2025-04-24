@@ -18,6 +18,7 @@ variable "subnet_csv_files" {
     각 VPC별 서브넷 정보를 담은 CSV 파일 경로의 map.
     key는 VPC 식별자와 일치해야 하며, value는 해당 VPC의 서브넷 CSV 파일 경로입니다.
     CSV 파일은 헤더를 포함해야 하며, 최소한 다음 컬럼을 포함합니다.
+      - vpc  : 사용할 VPC 이름
       - name : 서브넷 이름 (예: test.stg.korea.service.ap-northeast-2a)
       - cidr : 서브넷 CIDR (예: 10.0.1.0/24)
   EOT
