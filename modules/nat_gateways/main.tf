@@ -35,7 +35,7 @@ resource "aws_eip" "this" {
   vpc = true
   
   tags = merge(
-    var.common_tags,
+    var.common_tags, var.local_tags,
     { Name = "${each.key}-eip" }
   )
 }
@@ -56,7 +56,7 @@ resource "aws_nat_gateway" "this" {
   ) : null
 
   tags = merge(
-    var.common_tags,
+    var.common_tags, var.local_tags,
     { Name = each.value.nat_gateway_name }
   )
 
