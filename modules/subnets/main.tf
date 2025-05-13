@@ -28,11 +28,11 @@ locals {
   }
 
   app_names = [
-    for cfg in local.subnets_map : cfg.name
+    for cfg in local.processed_subnets : "${s.vpc_key}-${s.name}" => cfg
     if can(regex("\\.app\\.", cfg.name))
   ]
   ops_names = [
-    for cfg in local.subnets_map : cfg.name
+    for cfg in local.processed_subnets : "${s.vpc_key}-${s.name}" => cfg
     if can(regex("\\.ops\\.", cfg.name)) || can(regex("\\.infra\\.", cfg.name))
   ]
 
