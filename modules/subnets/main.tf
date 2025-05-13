@@ -77,6 +77,26 @@ locals {
       },
     ]
   }
+  app_tag_pairs = flatten([
+    for subnet_key, subnet in local.subnets_by_tag_group.App : [
+      for idx, tag in local.subnet_tag_sets.app : {
+        key         = "${subnet_key}-${idx}"
+        subnet_name = subnet.name
+        tag_key     = tag.key
+        tag_value   = tag.value
+      }
+    ]
+  ])
+  ops_tag_pairs = flatten([
+    for subnet_key, subnet in local.subnets_by_tag_group.Ops : [
+      for idx, tag in local.subnet_tag_sets.ops : {
+        key         = "${subnet_key}-${idx}"
+        subnet_name = subnet.name
+        tag_key     = tag.key
+        tag_value   = tag.value
+      }
+    ]
+  ])
 
 }
 
@@ -107,34 +127,22 @@ resource "aws_ec2_tag" "subnet_all" {
 
 resource "aws_ec2_tag" "subnet_app_group" {
   for_each = {
-    for subnet_key, subnet in local.subnets_by_tag_group.App :
-    for i, tag in local.subnet_tag_sets.app :
-    "${subnet_key}-${i}" => {
-      resource_id = aws_subnet.this[each.key].id
-      key         = tag.key
-      value       = tag.value
-    }
+    for tag in local.app_tag_pairs : tag.key => tag
   }
 
-  resource_id = each.value.resource_id
-  key         = each.value.key
-  value       = each.value.value
+  resource_id = aws_subnet.this[each.value.subnet_name].id
+  key         = each.value.tag_key
+  value       = each.value.tag_value
 }
 
 resource "aws_ec2_tag" "subnet_ops_group" {
   for_each = {
-    for subnet_key, subnet in local.subnets_by_tag_group.Ops :
-    for i, tag in local.subnet_tag_sets.ops :
-    "${subnet_key}-${i}" => {
-      resource_id = aws_subnet.this[each.key].id
-      key         = tag.key
-      value       = tag.value
-    }
+    for tag in local.ops_tag_pairs : tag.key => tag
   }
 
-  resource_id = each.value.resource_id
-  key         = each.value.key
-  value       = each.value.value
+  resource_id = aws_subnet.this[each.value.subnet_name].id
+  key         = each.value.tag_key
+  value       = each.value.tag_value
 }
 
 
