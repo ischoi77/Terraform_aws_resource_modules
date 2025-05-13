@@ -42,38 +42,38 @@ locals {
   subnet_tag_sets = {
     app = [
       {
-        key   = var.subent_tags.app.key1
-        value = var.subent_tags.app.value1
+        key   = var.subnet_tags.app.key1
+        value = var.subnet_tags.app.value1
       },
       {
-        key   = var.subent_tags.app.key2
-        value = var.subent_tags.app.value2
+        key   = var.subnet_tags.app.key2
+        value = var.subnet_tags.app.value2
       },
       {
-        key   = var.subent_tags.app.key3
-        value = var.subent_tags.app.value3
+        key   = var.subnet_tags.app.key3
+        value = var.subnet_tags.app.value3
       },
       {
-        key   = var.subent_tags.app.key4
-        value = var.subent_tags.app.value4
+        key   = var.subnet_tags.app.key4
+        value = var.subnet_tags.app.value4
       },
     ]
     ops = [
       {
-        key   = var.subent_tags.ops.key1
-        value = var.subent_tags.ops.value1
+        key   = var.subnet_tags.ops.key1
+        value = var.subnet_tags.ops.value1
       },
       {
-        key   = var.subent_tags.ops.key2
-        value = var.subent_tags.ops.value2
+        key   = var.subnet_tags.ops.key2
+        value = var.subnet_tags.ops.value2
       },
       {
-        key   = var.subent_tags.ops.key3
-        value = var.subent_tags.ops.value3
+        key   = var.subnet_tags.ops.key3
+        value = var.subnet_tags.ops.value3
       },
       {
-        key   = var.subent_tags.ops.key4
-        value = var.subent_tags.ops.value4
+        key   = var.subnet_tags.ops.key4
+        value = var.subnet_tags.ops.value4
       },
     ]
   }
