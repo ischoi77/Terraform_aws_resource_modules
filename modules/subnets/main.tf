@@ -62,13 +62,57 @@ resource "aws_ec2_tag" "subnet_all" {
   value = jsonencode({"purpose" = "${each.value.purpose}"})
 }
 
-# resource "aws_ec2_tag" "app1" {
-#   for_each = local.app_names
-#   resource_id = aws_subnet.this[each.key]
-#   key = 
+resource "aws_ec2_tag" "app_class0" {
+  for_each = local.app_names
+  resource_id = aws_subnet.this[each.key].id
+  key = "class0"
+  value = "Service"
+}
+resource "aws_ec2_tag" "app_class1" {
+  for_each = local.app_names
+  resource_id = aws_subnet.this[each.key].id
+  key = "class1"
+  value = "Backend"
+}
 
-# }
+resource "aws_ec2_tag" "app_gbl_class0" {
+  for_each = local.app_names
+  resource_id = aws_subnet.this[each.key].id
+  key = "GBL_CLASS_0"
+  value = "SERVICE"
+}
 
-# resource "aws_ec2_tag" "ops" {
-#   for_each = 
-# }
+resource "aws_ec2_tag" "app_gbl_class1" {
+  for_each = local.app_names
+  resource_id = aws_subnet.this[each.key].id
+  key = "GBL_CLASS_1"
+  value = "BACKEND"
+}
+
+
+resource "aws_ec2_tag" "ops_class0" {
+  for_each = local.ops_names
+  resource_id = aws_subnet.this[each.key].id
+  key = "class0"
+  value = "Operation"
+}
+resource "aws_ec2_tag" "ops_class1" {
+  for_each = local.ops_names
+  resource_id = aws_subnet.this[each.key].id
+  key = "class1"
+  value = "Infra"
+}
+
+resource "aws_ec2_tag" "ops_gbl_class0" {
+  for_each = local.ops_names
+  resource_id = aws_subnet.this[each.key].id
+  key = "GBL_CLASS_0"
+  value = "OPERATION"
+}
+
+resource "aws_ec2_tag" "ops_gbl_class1" {
+  for_each = local.ops_names
+  resource_id = aws_subnet.this[each.key].id
+  key = "GBL_CLASS_1"
+  value = "INFRA"
+}
