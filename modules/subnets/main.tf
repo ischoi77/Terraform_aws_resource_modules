@@ -14,16 +14,28 @@ locals {
         vpc_key           = vpc_key,
         name              = s.name,
         cidr              = s.cidr,
+        purpose           = join(".", slice(split(".", s.name), 0, length(split(".", s.name)) - 1))
         availability_zone = element(split(".", s.name),length(split(".", s.name)) - 1)
       }
     ]
   ])
 
+  
   # 평면화한 리스트를 고유 key를 가지는 map으로 변환합니다.
   # 고유 key는 "<vpc_key>-<subnet_name>" 형식으로 생성합니다.
   subnets_map = {
     for s in local.processed_subnets : "${s.vpc_key}-${s.name}" => s
   }
+
+  app_names = [
+    for cfg in local.subnets_map : cfg.name
+    if can(regex("\\.app\\.", cfg.name))
+  ]
+  ops_names = [
+    for cfg in local.subnets_map : cfg.name
+    if can(regex("\\.ops\\.", cfg.name)) || can(regex("\\.infra\\.", cfg.name))
+  ]
+
 }
 
 resource "aws_subnet" "this" {
@@ -37,4 +49,27 @@ resource "aws_subnet" "this" {
     var.common_tags,
     { "Name" = each.value.name }
   )
+  lifecycle {
+    ignore_changes = [ tags ]
+  }
 }
+
+
+resource "aws_ec2_tag" "subnet_all" {
+  for_each = local.subnets_map
+  resource_id = aws_subnet.this[each.key]
+  key = "immutable_metadata"
+  value = '{"purpose":"${each.value.purpose}"}'
+
+}
+
+# resource "aws_ec2_tag" "app1" {
+#   for_each = local.app_names
+#   resource_id = aws_subnet.this[each.key]
+#   key = 
+
+# }
+
+# resource "aws_ec2_tag" "ops" {
+#   for_each = 
+# }
