@@ -59,7 +59,7 @@ resource "aws_ec2_tag" "subnet_all" {
   for_each = local.subnets_map
   resource_id = aws_subnet.this[each.key]
   key = "immutable_metadata"
-  value = jsonencode("purpose" = "${each.value.purpose}")
+  value = jsonencode({"purpose" = "${each.value.purpose}"})
 }
 
 # resource "aws_ec2_tag" "app1" {
