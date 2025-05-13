@@ -27,14 +27,16 @@ locals {
     for s in local.processed_subnets : "${s.vpc_key}-${s.name}" => s
   }
 
-  app_names = [
-    for cfg in local.processed_subnets : "${s.vpc_key}-${s.name}" => cfg
-    if can(regex("\\.app\\.", cfg.name))
-  ]
-  ops_names = [
-    for cfg in local.processed_subnets : "${s.vpc_key}-${s.name}" => cfg
-    if can(regex("\\.ops\\.", cfg.name)) || can(regex("\\.infra\\.", cfg.name))
-  ]
+  subnet_names_by_tag = {
+    App = [
+      for s in local.processed_subnets : s.name
+      if can(regex("\\.app\\.", s.name))
+    ]
+    Ops = [
+      for s in local.processed_subnets : s.name
+      if can(regex("\\.ops\\.", s.name)) || can(regex("\\.infra\\.", s.name))
+    ]
+  }
 
 }
 
@@ -63,27 +65,27 @@ resource "aws_ec2_tag" "subnet_all" {
 }
 
 resource "aws_ec2_tag" "app_class0" {
-  for_each = local.app_names
+  for_each = local.subnet_names_by_tag.App
   resource_id = aws_subnet.this[each.key].id
   key = "class0"
   value = "Service"
 }
 resource "aws_ec2_tag" "app_class1" {
-  for_each = local.app_names
+  for_each = local.subnet_names_by_tag.App
   resource_id = aws_subnet.this[each.key].id
   key = "class1"
   value = "Backend"
 }
 
 resource "aws_ec2_tag" "app_gbl_class0" {
-  for_each = local.app_names
+  for_each = local.subnet_names_by_tag.App
   resource_id = aws_subnet.this[each.key].id
   key = "GBL_CLASS_0"
   value = "SERVICE"
 }
 
 resource "aws_ec2_tag" "app_gbl_class1" {
-  for_each = local.app_names
+  for_each = local.subnet_names_by_tag.App
   resource_id = aws_subnet.this[each.key].id
   key = "GBL_CLASS_1"
   value = "BACKEND"
@@ -91,27 +93,27 @@ resource "aws_ec2_tag" "app_gbl_class1" {
 
 
 resource "aws_ec2_tag" "ops_class0" {
-  for_each = local.ops_names
+  for_each = local.subnet_names_by_tag.Ops
   resource_id = aws_subnet.this[each.key].id
   key = "class0"
   value = "Operation"
 }
 resource "aws_ec2_tag" "ops_class1" {
-  for_each = local.ops_names
+  for_each = local.subnet_names_by_tag.Ops
   resource_id = aws_subnet.this[each.key].id
   key = "class1"
   value = "Infra"
 }
 
 resource "aws_ec2_tag" "ops_gbl_class0" {
-  for_each = local.ops_names
+  for_each = local.subnet_names_by_tag.Ops
   resource_id = aws_subnet.this[each.key].id
   key = "GBL_CLASS_0"
   value = "OPERATION"
 }
 
 resource "aws_ec2_tag" "ops_gbl_class1" {
-  for_each = local.ops_names
+  for_each = local.subnet_names_by_tag.Ops
   resource_id = aws_subnet.this[each.key].id
   key = "GBL_CLASS_1"
   value = "INFRA"
