@@ -47,6 +47,9 @@ resource "aws_security_group" "this" {
       "Name" = each.value.sg_name
     }
   )
+  lifecycle {
+    ignore_changes = [ description ]
+  }
 }
 
 resource "aws_security_group_rule" "this" {
