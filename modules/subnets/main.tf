@@ -27,24 +27,16 @@ locals {
     for s in local.processed_subnets : "${s.vpc_key}-${s.name}" => s
   }
 
-  subnet_names_by_tag = {
-    App = [
-      for s in local.processed_subnets : s.name
-      if can(regex("\\.app\\.", s.name))
-    ]
-    Ops = [
-      for s in local.processed_subnets : s.name
-      if can(regex("\\.ops\\.", s.name)) || can(regex("\\.infra\\.", s.name))
-    ]
-  }
   subnets_by_tag_group = {
     App = {
       for k, s in local.subnets_map :
-      k => s if contains(local.subnets_by_tag_group.App, s.name)
+      k => s if can(regex("\\.app\\.", s.name))
     }
-    TestDev = {
+    Ops = {
       for k, s in local.subnets_map :
-      k => s if contains(local.subnets_by_tag_group.Ops, s.name)
+      k => s if (
+        can(regex("\\.ops\\.", s.name)) || can(regex("\\.infra\\.", s.name))
+      )
     }
   }
 
