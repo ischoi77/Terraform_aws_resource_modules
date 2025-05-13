@@ -44,7 +44,7 @@ locals {
     }
     TestDev = {
       for k, s in local.subnets_map :
-      k => s if contains(local.subnets_by_tag_group.TestDev, s.name)
+      k => s if contains(local.subnets_by_tag_group.Ops, s.name)
     }
   }
 
