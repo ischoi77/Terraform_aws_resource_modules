@@ -39,6 +39,44 @@ locals {
       )
     }
   }
+  subnet_tag_sets = {
+    app = [
+      {
+        key   = var.subent_tags.app.key1
+        value = var.subent_tags.app.value1
+      },
+      {
+        key   = var.subent_tags.app.key2
+        value = var.subent_tags.app.value2
+      },
+      {
+        key   = var.subent_tags.app.key3
+        value = var.subent_tags.app.value3
+      },
+      {
+        key   = var.subent_tags.app.key4
+        value = var.subent_tags.app.value4
+      },
+    ]
+    ops = [
+      {
+        key   = var.subent_tags.ops.key1
+        value = var.subent_tags.ops.value1
+      },
+      {
+        key   = var.subent_tags.ops.key2
+        value = var.subent_tags.ops.value2
+      },
+      {
+        key   = var.subent_tags.ops.key3
+        value = var.subent_tags.ops.value3
+      },
+      {
+        key   = var.subent_tags.ops.key4
+        value = var.subent_tags.ops.value4
+      },
+    ]
+  }
 
 }
 
@@ -66,57 +104,86 @@ resource "aws_ec2_tag" "subnet_all" {
   value = jsonencode({"purpose" = "${each.value.purpose}"})
 }
 
-resource "aws_ec2_tag" "app_class0" {
-  for_each = local.subnets_by_tag_group.App
-  resource_id = aws_subnet.this[each.key].id
-  key = "class0"
-  value = "Service"
-}
-resource "aws_ec2_tag" "app_class1" {
-  for_each = local.subnets_by_tag_group.App
-  resource_id = aws_subnet.this[each.key].id
-  key = "class1"
-  value = "Backend"
+
+resource "aws_ec2_tag" "subnet_app_group" {
+  for_each = {
+    for subnet_key, subnet in local.subnets_by_tag_group.App :
+    for i, tag in local.subnet_tag_sets.app :
+    "${subnet_key}-${i}" => {
+      resource_id = aws_subnet.this[each.key].id
+      key         = tag.key
+      value       = tag.value
+    }
+  }
+
+  resource_id = each.value.resource_id
+  key         = each.value.key
+  value       = each.value.value
 }
 
-resource "aws_ec2_tag" "app_gbl_class0" {
-  for_each = local.subnets_by_tag_group.App
-  resource_id = aws_subnet.this[each.key].id
-  key = "GBL_CLASS_0"
-  value = "SERVICE"
+resource "aws_ec2_tag" "subnet_ops_group" {
+  for_each = {
+    for subnet_key, subnet in local.subnets_by_tag_group.Ops :
+    for i, tag in local.subnet_tag_sets.ops :
+    "${subnet_key}-${i}" => {
+      resource_id = aws_subnet.this[each.key].id
+      key         = tag.key
+      value       = tag.value
+    }
+  }
+
+  resource_id = each.value.resource_id
+  key         = each.value.key
+  value       = each.value.value
 }
 
-resource "aws_ec2_tag" "app_gbl_class1" {
-  for_each = local.subnets_by_tag_group.App
-  resource_id = aws_subnet.this[each.key].id
-  key = "GBL_CLASS_1"
-  value = "BACKEND"
-}
 
 
-resource "aws_ec2_tag" "ops_class0" {
-  for_each = local.subnets_by_tag_group.Ops
-  resource_id = aws_subnet.this[each.key].id
-  key = "class0"
-  value = "Operation"
-}
-resource "aws_ec2_tag" "ops_class1" {
-  for_each = local.subnets_by_tag_group.Ops
-  resource_id = aws_subnet.this[each.key].id
-  key = "class1"
-  value = "Infra"
-}
-
-resource "aws_ec2_tag" "ops_gbl_class0" {
-  for_each = local.subnets_by_tag_group.Ops
-  resource_id = aws_subnet.this[each.key].id
-  key = "GBL_CLASS_0"
-  value = "OPERATION"
-}
-
-resource "aws_ec2_tag" "ops_gbl_class1" {
-  for_each = local.subnets_by_tag_group.Ops
-  resource_id = aws_subnet.this[each.key].id
-  key = "GBL_CLASS_1"
-  value = "INFRA"
-}
+# resource "aws_ec2_tag" "app_class0" {
+#   for_each = local.subnets_by_tag_group.App
+#   resource_id = aws_subnet.this[each.key].id
+#   key = "class0"
+#   value = "Service"
+# }
+# resource "aws_ec2_tag" "app_class1" {
+#   for_each = local.subnets_by_tag_group.App
+#   resource_id = aws_subnet.this[each.key].id
+#   key = "class1"
+#   value = "Backend"
+# }
+# resource "aws_ec2_tag" "app_gbl_class0" {
+#   for_each = local.subnets_by_tag_group.App
+#   resource_id = aws_subnet.this[each.key].id
+#   key = "GBL_CLASS_0"
+#   value = "SERVICE"
+# }
+# resource "aws_ec2_tag" "app_gbl_class1" {
+#   for_each = local.subnets_by_tag_group.App
+#   resource_id = aws_subnet.this[each.key].id
+#   key = "GBL_CLASS_1"
+#   value = "BACKEND"
+# }
+# resource "aws_ec2_tag" "ops_class0" {
+#   for_each = local.subnets_by_tag_group.Ops
+#   resource_id = aws_subnet.this[each.key].id
+#   key = "class0"
+#   value = "Operation"
+# }
+# resource "aws_ec2_tag" "ops_class1" {
+#   for_each = local.subnets_by_tag_group.Ops
+#   resource_id = aws_subnet.this[each.key].id
+#   key = "class1"
+#   value = "Infra"
+# }
+# resource "aws_ec2_tag" "ops_gbl_class0" {
+#   for_each = local.subnets_by_tag_group.Ops
+#   resource_id = aws_subnet.this[each.key].id
+#   key = "GBL_CLASS_0"
+#   value = "OPERATION"
+# }
+# resource "aws_ec2_tag" "ops_gbl_class1" {
+#   for_each = local.subnets_by_tag_group.Ops
+#   resource_id = aws_subnet.this[each.key].id
+#   key = "GBL_CLASS_1"
+#   value = "INFRA"
+# }
