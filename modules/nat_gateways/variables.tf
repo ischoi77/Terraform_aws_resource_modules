@@ -8,10 +8,10 @@ variable "common_tags" {
   type        = map(string)
 }
 
-variable "local_tags" {
-  description = "리소스별 tag"
-  type        = map(string)
-}
+# variable "local_tags" {
+#   description = "리소스별 tag"
+#   type        = map(string)
+# }
 
 variable "subnet_ids" {
   type        = map(string)
