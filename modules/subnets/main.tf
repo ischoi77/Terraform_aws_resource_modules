@@ -81,6 +81,7 @@ locals {
     for subnet_key, subnet in local.subnets_by_tag_group.App : [
       for idx, tag in local.subnet_tag_sets.app : {
         key         = "${subnet_key}-${idx}"
+        vpc_key     = subnet.vpc_key
         subnet_name = subnet.name
         tag_key     = tag.key
         tag_value   = tag.value
@@ -91,6 +92,7 @@ locals {
     for subnet_key, subnet in local.subnets_by_tag_group.Ops : [
       for idx, tag in local.subnet_tag_sets.ops : {
         key         = "${subnet_key}-${idx}"
+        vpc_key     = subnet.vpc_key
         subnet_name = subnet.name
         tag_key     = tag.key
         tag_value   = tag.value
@@ -130,7 +132,7 @@ resource "aws_ec2_tag" "subnet_app_group" {
     for tag in local.app_tag_pairs : tag.key => tag
   }
 
-  resource_id = aws_subnet.this[each.value.subnet_name].id
+  resource_id = aws_subnet.this["${each.value.vpc_key}-${each.value.subnet_name}"].id
   key         = each.value.tag_key
   value       = each.value.tag_value
 }
@@ -140,7 +142,7 @@ resource "aws_ec2_tag" "subnet_ops_group" {
     for tag in local.ops_tag_pairs : tag.key => tag
   }
 
-  resource_id = aws_subnet.this[each.value.subnet_name].id
+  resource_id = aws_subnet.this["${each.value.vpc_key}-${each.value.subnet_name}"].id
   key         = each.value.tag_key
   value       = each.value.tag_value
 }
