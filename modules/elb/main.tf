@@ -6,14 +6,17 @@ resource "aws_elb" "this" {
   security_groups    = lookup(each.value, "security_groups", null)
   subnets            = lookup(each.value, "subnets", null)
 
-  listener {
-    instance_port     = listener.value.instance_port
-    instance_protocol = listener.value.instance_protocol
-    lb_port           = listener.value.lb_port
-    lb_protocol       = listener.value.lb_protocol
-    ssl_certificate_id = lookup(listener.value, "ssl_certificate_id", null)
-  } for listener in each.value.listeners
-
+  dynamic "listener" {
+    for_each = each.value.listeners
+    content {
+      instance_port      = listener.value.instance_port
+      instance_protocol  = listener.value.instance_protocol
+      lb_port            = listener.value.lb_port
+      lb_protocol        = listener.value.lb_protocol
+      ssl_certificate_id = lookup(listener.value, "ssl_certificate_id", null)
+    }
+  }
+  
   health_check {
     target              = each.value.health_check.target
     interval            = each.value.health_check.interval
