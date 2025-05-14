@@ -52,6 +52,6 @@ variable "buckets" {
       error_document = string
     })
 
-    policy = string
+    policy_file = string
   }))
 }

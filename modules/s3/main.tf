@@ -5,8 +5,7 @@ resource "aws_s3_bucket" "this" {
   acl    = each.value.acl
 
   force_destroy = each.value.force_destroy
-
-  tags = merge(var.common_tags, each.value.tags)
+  tags          = merge(var.common_tags, each.value.tags)
 
   dynamic "versioning" {
     for_each = each.value.enable_versioning ? [1] : []
@@ -28,8 +27,7 @@ resource "aws_s3_bucket" "this" {
     content {
       id      = lifecycle_rule.value.id
       enabled = lifecycle_rule.value.enabled
-
-      prefix = lookup(lifecycle_rule.value, "prefix", null)
+      prefix  = lookup(lifecycle_rule.value, "prefix", null)
 
       dynamic "transition" {
         for_each = lifecycle_rule.value.transitions
@@ -79,5 +77,5 @@ resource "aws_s3_bucket" "this" {
     }
   }
 
-  policy = each.value.policy
+  policy = each.value.policy_file != null ? file("${path.root}/s3_policy/${each.value.policy_file}") : null
 }
