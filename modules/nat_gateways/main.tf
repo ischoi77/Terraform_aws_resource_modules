@@ -63,11 +63,13 @@ resource "aws_nat_gateway" "this" {
 
   tags = merge(
     var.common_tags,
-    # CSV의 key/value 쌍을 태그로 변환
-    { for t in each.value.tag_entries : t.key => t.value if t.key != "" && t.value != "" },
+    # CSV의 key/value 쌍을 태그로 변환 (null 또는 빈 문자열은 자동 제외)
+    { for t in each.value.tag_entries : t.key => t.value
+      if t.key   != null && t.key   != "" &&
+         t.value != null && t.value != ""
+    },
     { Name = each.key }
   )
-
   # NAT Gateway 생성 시, EIP가 필요한 경우 해당 EIP 리소스 생성이 완료된 후에 진행하도록 의존성을 설정합니다.
   depends_on = [aws_eip.this]
 }
