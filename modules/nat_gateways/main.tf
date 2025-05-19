@@ -17,7 +17,13 @@ locals {
       nat_gateway_name = row.nat_gateway_name
       subnet           = row.subnet
       public           = lower(trimspace(row.public)) == "true"
-      allocation_id    = row.allocation_id
+      allocation_id = trimspace(row.allocation_id)
+      tag_entries = [
+        { key = trimspace(row.key1), value = trimspace(row.value1) },
+        { key = trimspace(row.key2), value = trimspace(row.value2) },
+        { key = trimspace(row.key3), value = trimspace(row.value3) },
+        { key = trimspace(row.key4), value = trimspace(row.value4) },
+      ]
     }
   }
 
@@ -57,7 +63,9 @@ resource "aws_nat_gateway" "this" {
 
   tags = merge(
     var.common_tags,
-    { Name = each.value.nat_gateway_name }
+    # CSV의 key/value 쌍을 태그로 변환
+    { for t in each.value.tag_entries : t.key => t.value if t.key != "" && t.value != "" },
+    { Name = each.key }
   )
 
   # NAT Gateway 생성 시, EIP가 필요한 경우 해당 EIP 리소스 생성이 완료된 후에 진행하도록 의존성을 설정합니다.
