@@ -72,6 +72,11 @@ resource "aws_nat_gateway" "this" {
   )
   # NAT Gateway 생성 시, EIP가 필요한 경우 해당 EIP 리소스 생성이 완료된 후에 진행하도록 의존성을 설정합니다.
   depends_on = [aws_eip.this]
+
+  # 최초 생성시 만 필요한 allocation_id 생성 로직에 대해 변경에 대한 내용을 무시하도록 설정
+  lifecycle {
+    ignore_changes = [ allocation_id ]
+  }
 }
 
 data "aws_eip" "natgw_eip_lookup" {
