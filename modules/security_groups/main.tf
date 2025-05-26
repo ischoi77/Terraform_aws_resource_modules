@@ -86,6 +86,9 @@ resource "aws_security_group_rule" "this" {
 
   // Rule_Description 항목이 비어있을 경우 빈 문자열로 처리
   description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+  lifecycle {
+    ignore_changes = [ description ]
+  }
 }
 
 
