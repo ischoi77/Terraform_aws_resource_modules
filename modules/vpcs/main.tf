@@ -23,7 +23,7 @@ locals {
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "this" {
-  for_each = { for idx, entry in local.additional_cidr_entries : "${entry.vpc_key}-${idx}" => entry }
+  for_each = { for entry in local.additional_cidr_entries : "${entry.vpc_key}-${replace(entry.cidr, "/", "-")}" => entry }
 
   vpc_id     = aws_vpc.this[each.value.vpc_key].id
   cidr_block = each.value.cidr
