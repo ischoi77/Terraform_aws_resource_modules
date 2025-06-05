@@ -6,7 +6,7 @@
 variable "route_tables" {
   description = "각 route table에 대한 구성 정보"
   type = map(object({
-    name    = string         // route table 이름
+    #name    = string         // route table 이름
     vpc_name = string
     routes  = list(object({
       route_key = string      // ip_lists/<route_key>.list 파일 접두어 (파일은 destination CIDR 블록만 포함)
@@ -52,4 +52,11 @@ variable "vpc_peering_ids" {
 variable "subnet_ids" {
   description = "외부 모듈(module.subnets)에서 전달받은 subnet ID map (key: subnet 이름, value: subnet ID)"
   type        = map(string)
+}
+
+
+# 추가: CSV 파일 경로를 지정하기 위한 변수
+variable "routes_csv_file" {
+  description = "Route 목록을 담은 CSV 파일 경로 (예: routes.csv 또는 상대/절대 경로)"
+  type        = string
 }
