@@ -8,10 +8,10 @@ variable "route_tables" {
   type = map(object({
     #name    = string         // route table 이름
     vpc_name = string
-    routes  = list(object({
-      route_key = string      // ip_lists/<route_key>.list 파일 접두어 (파일은 destination CIDR 블록만 포함)
-      gateway   = string      // 사용할 gateway 이름 (local.gateway_map 의 key 값)
-    }))
+    # routes  = list(object({
+    #   route_key = string      // ip_lists/<route_key>.list 파일 접두어 (파일은 destination CIDR 블록만 포함)
+    #   gateway   = string      // 사용할 gateway 이름 (local.gateway_map 의 key 값)
+    # }))
     subnets = list(string)   // 외부 모듈(module.subnets)에서 전달받은 subnet_ids map의 key 값 선택
     tags    = map(string)    // 개별 리소스 태그
   }))
