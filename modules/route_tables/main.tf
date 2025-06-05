@@ -105,10 +105,14 @@ locals {
     for rt_key, rt_info in var.route_tables : [
       for item in lookup(local.routes_by_table, rt_key, []) : [
         for line in split("\n", trimspace(file("${path.root}/ip_lists/${item.route_key}.list"))) : {
+            # md5 키는 정적인 값만 사용 (인덱스 미사용)
+          key = md5(
+            "${rt_key}|${item.route_key}|${item.gateway}|${trimspace(line)}"
+          ),
           route_table_key           = rt_key,
           destination_cidr_block    = trimspace(line),
-          gateway    = item.gateway,
-          route_key  = item.route_key,
+          #gateway    = item.gateway,
+          #route_key  = item.route_key,
           gateway_id = (
             length(regexall("peering", item.gateway)) > 0 ? null :
             length(regexall("ngw",     item.gateway)) > 0 ? null :
@@ -126,20 +130,20 @@ locals {
       ]
     ]
   ])
-
+ preprocessed_routes = { for route in local.parsed_routes_raw : route.key => route }
   ############################################
   # 3) MD5 키를 미리 계산하여 map 형태로 변환
   ############################################
-  preprocessed_routes = {
-    for route in local.parsed_routes_raw :
-    # MD5 키 생성: rt_key|CIDR|gateway_id|nat_gateway_id|peering_id
-    md5("${route.route_table_key}|${route.route_key}|${route.gateway}|${trimspace(line)}") = > route
-    #   "%s|%s|%s",
-    #   route.route_table_key,
-    #   route.destination_cidr_block,
-    #   route.gateway
-    # )) => route
-  }
+  # preprocessed_routes = {
+  #   for route in local.parsed_routes_raw :
+  #   # MD5 키 생성: rt_key|CIDR|gateway_id|nat_gateway_id|peering_id
+  #   md5("${route.route_table_key}|${route.route_key}|${route.gateway}|${trimspace(line)}") = > route
+  #   #   "%s|%s|%s",
+  #   #   route.route_table_key,
+  #   #   route.destination_cidr_block,
+  #   #   route.gateway
+  #   # )) => route
+  # }
 
   ############################################
   # 4) Route Table <-> Subnet Association 정보
