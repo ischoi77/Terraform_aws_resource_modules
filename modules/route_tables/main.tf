@@ -1,78 +1,3 @@
-
-# locals {
-
-
-#   # parsed_routes = flatten([
-#   #   for rt_key, rt in var.route_tables : [
-#   #     for route_item in rt.routes : [
-#   #       for line in split("\n", trimspace(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
-#   #         route_table_key           = rt_key,
-#   #         destination_cidr_block    = trimspace(line),
-#   #         gateway_id = (
-#   #           length(regexall("peering", route_item.gateway)) > 0 ? null :
-#   #           length(regexall("ngw", route_item.gateway)) > 0 ? null :
-#   #           lookup(var.igw_ids, route_item.gateway, "")
-#   #         ),
-#   #         nat_gateway_id = (
-#   #           length(regexall("ngw", route_item.gateway)) > 0 ?
-#   #           lookup(var.ngw_ids, route_item.gateway, "") : null
-#   #         ),
-#   #         vpc_peering_connection_id = (
-#   #           length(regexall("peering", route_item.gateway)) > 0 ?
-#   #           lookup(var.vpc_peering_ids, route_item.gateway, "") : null
-#   #         )
-#   #       }
-#   #     ]
-#   #   ]
-#   # ])
-
-#     # 미리 각 route 항목에 대해 고유한 key를 계산합니다.
-#   preprocessed_routes = flatten([
-#     for rt_key, rt in var.route_tables : [
-#       for route_item in rt.routes : [
-#         for line in split("\n", trimspace(file("${path.root}/ip_lists/${route_item.route_key}.list"))) : {
-#           # md5 키는 정적인 값만 사용 (인덱스 미사용)
-#           key = md5(
-#             "${rt_key}|${route_item.route_key}|${route_item.gateway}|${trimspace(line)}"
-#           ),
-
-          
-#           route_table_key        = rt_key,
-#           destination_cidr_block = trimspace(line),
-#           gateway_id = (
-#             length(regexall("peering", route_item.gateway)) > 0 ? null :
-#             length(regexall("ngw", route_item.gateway)) > 0 ? null :
-#             lookup(var.igw_ids, route_item.gateway, "")
-#           ),
-#           nat_gateway_id = (
-#             length(regexall("ngw", route_item.gateway)) > 0 ?
-#             lookup(var.ngw_ids, route_item.gateway, "") : null
-#           ),
-#           vpc_peering_connection_id = (
-#             length(regexall("peering", route_item.gateway)) > 0 ?
-#             lookup(var.vpc_peering_ids, route_item.gateway, "") : null
-#           )
-#         }
-#       ]
-#     ]
-#   ])
-#   # preprocessed_routes 리스트를 key로 매핑한 map으로 변환 (이 map의 키는 모두 입력 변수에 기반하므로 결정적입니다)
-#   parsed_routes_map = { for route in local.preprocessed_routes : route.key => route }
-
-#   # 각 route table에 대한 서브넷 연결 정보를 생성하기 위해,
-#   # var.route_tables의 각 서브넷 이름을 외부 모듈의 subnet_ids map에서 lookup 하여 고유한 key를 부여합니다.
-#   route_table_associations = flatten([
-#     for rt_key, rt in var.route_tables : [
-#       for subnet_name in rt.subnets : {
-#         # 여기서는 입력 변수에 기반한 rt_key와 subnet_name을 키로 사용합니다.
-#         key            = "${rt_key}-${subnet_name}",
-#         route_table_key = rt_key,
-#         subnet_name    = subnet_name
-#       }
-#     ]
-#   ])
-# }
-
 locals {
   ############################################
   # 1) CSV 파일 읽어서 객체 리스트로 변환
@@ -131,22 +56,10 @@ locals {
     ]
   ])
  preprocessed_routes = { for route in local.parsed_routes_raw : route.key => route }
-  ############################################
-  # 3) MD5 키를 미리 계산하여 map 형태로 변환
-  ############################################
-  # preprocessed_routes = {
-  #   for route in local.parsed_routes_raw :
-  #   # MD5 키 생성: rt_key|CIDR|gateway_id|nat_gateway_id|peering_id
-  #   md5("${route.route_table_key}|${route.route_key}|${route.gateway}|${trimspace(line)}") = > route
-  #   #   "%s|%s|%s",
-  #   #   route.route_table_key,
-  #   #   route.destination_cidr_block,
-  #   #   route.gateway
-  #   # )) => route
-  # }
+
 
   ############################################
-  # 4) Route Table <-> Subnet Association 정보
+  # 3) Route Table <-> Subnet Association 정보
   ############################################
   route_table_associations = flatten([
     for rt_key, rt_info in var.route_tables : [
