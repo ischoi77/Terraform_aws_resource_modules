@@ -108,6 +108,7 @@ locals {
           route_table_key           = rt_key,
           destination_cidr_block    = trimspace(line),
           gateway    = item.gateway,
+          route_key  = item.route_key,
           gateway_id = (
             length(regexall("peering", item.gateway)) > 0 ? null :
             length(regexall("ngw",     item.gateway)) > 0 ? null :
@@ -132,12 +133,15 @@ locals {
   preprocessed_routes = {
     for route in local.parsed_routes_raw :
     # MD5 키 생성: rt_key|CIDR|gateway_id|nat_gateway_id|peering_id
-    md5(format(
-      "%s|%s|%s",
-      route.route_table_key,
-      route.destination_cidr_block,
-      route.gateway
-    )) => route
+    md5("${route.route_table_key}|${route.route_key}|${route.gateway}|${trimspace(line)}")= > route
+    #   "%s|%s|%s",
+    #   route.route_table_key,
+    #   route.destination_cidr_block,
+    #   route.gateway
+    # )) => route
+#           key = md5(
+#             "${rt_key}|${route_item.route_key}|${route_item.gateway}|${trimspace(line)}"
+#           ),
   }
 
   ############################################
