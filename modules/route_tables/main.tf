@@ -107,6 +107,7 @@ locals {
         for line in split("\n", trimspace(file("${path.root}/ip_lists/${item.route_key}.list"))) : {
           route_table_key           = rt_key,
           destination_cidr_block    = trimspace(line),
+          gateway    = item.gateway,
           gateway_id = (
             length(regexall("peering", item.gateway)) > 0 ? null :
             length(regexall("ngw",     item.gateway)) > 0 ? null :
@@ -132,12 +133,10 @@ locals {
     for route in local.parsed_routes_raw :
     # MD5 키 생성: rt_key|CIDR|gateway_id|nat_gateway_id|peering_id
     md5(format(
-      "%s|%s|%s|%s|%s",
+      "%s|%s|%s",
       route.route_table_key,
       route.destination_cidr_block,
-      route.gateway_id != null ? route.gateway_id : "",
-      route.nat_gateway_id != null ? route.nat_gateway_id : "",
-      route.vpc_peering_connection_id != null ? route.vpc_peering_connection_id : ""
+      route.gateway
     )) => route
   }
 
