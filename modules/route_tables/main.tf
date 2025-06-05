@@ -86,12 +86,15 @@ locals {
   routes_by_table = {
     for tbl in local.distinct_tables :
     tbl => [
-      for row in local.route_csv :
-      if row.table_name == tbl : {
+      # 올바른 리스트 내포식 문법: 먼저 "for row in local.route_csv :" 
+      # 다음에 생성할 객체, 마지막에 "if …" 
+      for row in local.route_csv : 
+      {
         route_key = row.route_list
         gateway   = row.gateway
         vpc_name  = row.vpc_name
       }
+      if row.table_name == tbl
     ]
   }
 
