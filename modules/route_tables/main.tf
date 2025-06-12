@@ -54,6 +54,8 @@ locals {
             ),
             route_table_key           = rt_key,
             destination_cidr_block    = trimspace(line),
+            prefix_list_id            = null,
+            vpc_endpoint_id           = null,
             #gateway    = item.gateway,
             #route_key  = item.route_key,
             gateway_id = (
