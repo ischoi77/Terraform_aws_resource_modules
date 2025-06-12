@@ -54,6 +54,10 @@ variable "subnet_ids" {
   type        = map(string)
 }
 
+variable "vpc_endpoint_ids" {
+  description = "외부 모듈(module.vpc_endpoints)에서 전달받은, VPC_endpoint 이름을 키로 하는 VPC endpoint ID 목록"
+  type        = map(string)
+}
 
 # 추가: CSV 파일 경로를 지정하기 위한 변수
 variable "routes_csv_file" {

@@ -28,31 +28,50 @@ locals {
   ############################################
   parsed_routes_raw = flatten([
     for rt_key, rt_info in var.route_tables : [
-      for item in lookup(local.routes_by_table, rt_key, []) : [
-        for line in split("\n", trimspace(file("${path.root}/ip_lists/${item.route_key}.list"))) : {
-            # md5 키는 정적인 값만 사용 (인덱스 미사용)
-          key = md5(
-            "${rt_key}|${item.route_key}|${item.gateway}|${trimspace(line)}"
-          ),
-          route_table_key           = rt_key,
-          destination_cidr_block    = trimspace(line),
-          #gateway    = item.gateway,
-          #route_key  = item.route_key,
-          gateway_id = (
-            length(regexall("peering", item.gateway)) > 0 ? null :
-            length(regexall("ngw",     item.gateway)) > 0 ? null :
-            lookup(var.igw_ids, item.gateway, "")
-          ),
-          nat_gateway_id = (
-            length(regexall("ngw", item.gateway)) > 0 ?
-            lookup(var.ngw_ids, item.gateway, "") : null
-          ),
-          vpc_peering_connection_id = (
-            length(regexall("peering", item.gateway)) > 0 ?
-            lookup(var.vpc_peering_ids, item.gateway, "") : null
-          )
-        }
-      ]
+      for item in lookup(local.routes_by_table, rt_key, []) : (
+        # pl- 로 시작하면 Prefix-List + Endpoint 모드
+        startswith(item.route_key, "pl-") ?
+          [
+            {
+              # MD5 키는 table|prefix-list|gateway
+              key                  = md5("${rt_key}|${item.route_key}|${item.gateway}"),
+              route_table_key      = rt_key,
+              prefix_list_id       = item.route_key,
+              #vpc_endpoint_id      = item.gateway,
+              vpc_endpoint_id      = lookup(var.vpc_endpoint_ids, item.gateway, ""),
+              destination_cidr_block    = null,
+              gateway_id                = null,
+              nat_gateway_id            = null,
+              vpc_peering_connection_id = null
+            }
+          ]
+          :
+          # 기존대로 파일 읽기 
+          [ for line in split("\n", trimspace(file("${path.root}/ip_lists/${item.route_key}.list"))) : {
+              # md5 키는 정적인 값만 사용 (인덱스 미사용)
+            key = md5(
+              "${rt_key}|${item.route_key}|${item.gateway}|${trimspace(line)}"
+            ),
+            route_table_key           = rt_key,
+            destination_cidr_block    = trimspace(line),
+            #gateway    = item.gateway,
+            #route_key  = item.route_key,
+            gateway_id = (
+              length(regexall("peering", item.gateway)) > 0 ? null :
+              length(regexall("ngw",     item.gateway)) > 0 ? null :
+              lookup(var.igw_ids, item.gateway, "")
+            ),
+            nat_gateway_id = (
+              length(regexall("ngw", item.gateway)) > 0 ?
+              lookup(var.ngw_ids, item.gateway, "") : null
+            ),
+            vpc_peering_connection_id = (
+              length(regexall("peering", item.gateway)) > 0 ?
+              lookup(var.vpc_peering_ids, item.gateway, "") : null
+            )
+          }
+        ]
+      )
     ]
   ])
  preprocessed_routes = { for route in local.parsed_routes_raw : route.key => route }
@@ -92,12 +111,13 @@ resource "aws_route" "this" {
   #for_each = local.parsed_routes_map
   for_each = local.preprocessed_routes
 
-  route_table_id         = aws_route_table.this[each.value.route_table_key].id
-  destination_cidr_block = each.value.destination_cidr_block
+  route_table_id             = aws_route_table.this[each.value.route_table_key].id
+  destination_cidr_block     = each.value.destination_cidr_block
+  destination_prefix_list_id = each.value.prefix_list_id
 
-  gateway_id                = each.value.gateway_id
-  nat_gateway_id            = each.value.nat_gateway_id
-  vpc_peering_connection_id = each.value.vpc_peering_connection_id
+  gateway_id                 = each.value.gateway_id
+  nat_gateway_id             = each.value.nat_gateway_id
+  vpc_peering_connection_id  = each.value.vpc_peering_connection_id
 }
 
 
