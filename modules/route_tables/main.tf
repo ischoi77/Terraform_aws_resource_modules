@@ -37,10 +37,8 @@ locals {
               key                  = md5("${rt_key}|${item.route_key}|${item.gateway}"),
               route_table_key      = rt_key,
               prefix_list_id       = item.route_key,
-              #vpc_endpoint_id      = item.gateway,
-              vpc_endpoint_id      = lookup(var.vpc_endpoint_ids, item.gateway, ""),
               destination_cidr_block    = null,
-              gateway_id                = null,
+              gateway_id                = lookup(var.vpc_endpoint_ids, item.gateway, ""),
               nat_gateway_id            = null,
               vpc_peering_connection_id = null
             }
