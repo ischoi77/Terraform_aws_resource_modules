@@ -126,7 +126,6 @@ resource "aws_route" "this" {
 
   route_table_id             = aws_route_table.this[each.value.route_table_key].id
   destination_cidr_block     = each.value.destination_cidr_block
-  destination_prefix_list_id = each.value.prefix_list_id
 
   gateway_id                 = each.value.gateway_id
   nat_gateway_id             = each.value.nat_gateway_id
@@ -145,6 +144,6 @@ resource "aws_route_table_association" "this" {
 
 resource "aws_vpc_endpoint_route_table_association" "this" {
   for_each = { for ea in local.endpoint_associations : ea.key => ea }
-  vpc_endpoint_id = aws_vpc_endpoint[each.value.vpc_endpoint_name].id
+  vpc_endpoint_id = var.vpc_endpoint_ids[each.value.vpc_endpoint_name]
   route_table_id  = aws_route_table.this[each.value.route_table_key].id
 }
