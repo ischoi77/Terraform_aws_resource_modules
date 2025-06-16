@@ -33,12 +33,12 @@ locals {
           item.route_key == "endpoint" ?
           [
             {
-              key                  = md5("${rt_key}|${item.route_key}|${item.gateway}")
-              route_table_key        = rt_key
-              destination_cidr_block = null
-              vpc_endpoint_id        = item.gateway_name
-              gateway_id             = null
-              nat_gateway_id         = null
+              key                  = md5("${rt_key}|${item.route_key}|${item.gateway}"),
+              route_table_key        = rt_key,
+              destination_cidr_block = null,
+              vpc_endpoint_id      = item.gateway
+              gateway_id             = null,
+              nat_gateway_id         = null,
               vpc_peering_connection_id = null
             }
           ]
@@ -144,6 +144,6 @@ resource "aws_route_table_association" "this" {
 
 resource "aws_vpc_endpoint_route_table_association" "this" {
   for_each = { for ea in local.endpoint_associations : ea.key => ea }
-  vpc_endpoint_id = var.vpc_endpoint_ids[each.value.vpc_endpoint_name]
+  vpc_endpoint_id =  lookup(var.vpc_endpoint_ids, each.value.vpc_endpoint_name, "")
   route_table_id  = aws_route_table.this[each.value.route_table_key].id
 }
