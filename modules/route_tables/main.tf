@@ -29,17 +29,16 @@ locals {
   parsed_routes_raw = flatten([
     for rt_key, rt_info in var.route_tables : [
       for item in lookup(local.routes_by_table, rt_key, []) : (
-        # pl- 로 시작하면 Prefix-List + Endpoint 모드
-        startswith(item.route_key, "pl-") ?
+          # endpoint 모드
+          item.route_key == "endpoint" ?
           [
             {
-              # MD5 키는 table|prefix-list|gateway
-              key                  = md5("${rt_key}|${item.route_key}|${item.gateway}"),
-              route_table_key      = rt_key,
-              prefix_list_id       = item.route_key,
-              destination_cidr_block    = null,
-              gateway_id                = lookup(var.vpc_endpoint_ids, item.gateway, ""),
-              nat_gateway_id            = null,
+              key                  = md5("${rt_key}|${item.route_key}|${item.gateway}")
+              route_table_key        = rt_key
+              destination_cidr_block = null
+              vpc_endpoint_id        = item.gateway_name
+              gateway_id             = null
+              nat_gateway_id         = null
               vpc_peering_connection_id = null
             }
           ]
@@ -89,6 +88,20 @@ locals {
       }
     ]
   ])
+
+  endpoint_associations = flatten([
+    for rt_key, rt_info in var.route_tables : [
+      for item in lookup(local.routes_by_table, rt_key, []) :
+        item.route_key == "endpoint" ? [
+          {
+            key               = "${rt_key}-${item.gateway_name}"
+            route_table_key   = rt_key
+            vpc_endpoint_name = item.gateway_name
+          }
+        ] : []
+    ]
+  ])
+
 }
 
 
@@ -127,4 +140,11 @@ resource "aws_route_table_association" "this" {
 
   route_table_id = aws_route_table.this[each.value.route_table_key].id
   subnet_id      = lookup(var.subnet_ids, each.value.subnet_name, "")
+}
+
+
+resource "aws_vpc_endpoint_route_table_association" "this" {
+  for_each = { for ea in local.endpoint_associations : ea.key => ea }
+  vpc_endpoint_id = aws_vpc_endpoint[each.value.vpc_endpoint_name].id
+  route_table_id  = aws_route_table.this[each.value.route_table_key].id
 }
