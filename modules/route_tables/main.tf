@@ -33,10 +33,9 @@ locals {
           item.route_key == "endpoint" ?
           [
             {
-              key                  = md5("${rt_key}|${item.route_key}|${item.gateway}"),
               route_table_key        = rt_key,
               destination_cidr_block = null,
-              vpc_endpoint_id      = item.gateway
+              vpc_endpoint_id      = item.gateway,
               gateway_id             = null,
               nat_gateway_id         = null,
               vpc_peering_connection_id = null
@@ -51,7 +50,6 @@ locals {
             ),
             route_table_key           = rt_key,
             destination_cidr_block    = trimspace(line),
-            prefix_list_id            = null,
             vpc_endpoint_id           = null,
             #gateway    = item.gateway,
             #route_key  = item.route_key,
@@ -73,7 +71,7 @@ locals {
       )
     ]
   ])
- preprocessed_routes = { for route in local.parsed_routes_raw : route.key => route }
+ preprocessed_routes = { for route in local.parsed_routes_raw : route.key => route if route.vpc_endpoint_id == null}
 
 
   ############################################
