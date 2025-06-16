@@ -94,9 +94,9 @@ locals {
       for item in lookup(local.routes_by_table, rt_key, []) :
         item.route_key == "endpoint" ? [
           {
-            key               = "${rt_key}-${item.vpc_endpoint_id}"
+            key               = "${rt_key}-${item.gateway}"
             route_table_key   = rt_key
-            vpc_endpoint_name = item.vpc_endpoint_id
+            vpc_endpoint_name = item.gateway
           }
         ] : []
     ]
