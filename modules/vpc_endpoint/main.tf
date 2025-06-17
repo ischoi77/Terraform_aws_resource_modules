@@ -4,6 +4,7 @@ locals {
       vpc_id            = var.vpc_ids[ep.vpc_name]
       service_name      = ep.service_name
       vpc_endpoint_type = ep.vpc_endpoint_type
+      policy            = ep.policyy != null ? jsonencode(ep.policy): null 
 
       route_table_ids = ep.vpc_endpoint_type == "Gateway" ? (
         length(coalesce(lookup(ep, "route_table_names", []), [])) > 0 ?
@@ -45,6 +46,8 @@ resource "aws_vpc_endpoint" "this" {
   subnet_ids        = each.value.subnet_ids
   security_group_ids = each.value.security_group_ids
   private_dns_enabled = each.value.private_dns_enabled
+
+  policy            = each.value.policy
 
   tags = each.value.tags
 }
