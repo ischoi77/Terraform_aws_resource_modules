@@ -31,7 +31,7 @@ variable "vpc_endpoints" {
     subnet_names         = optional(list(string))
     security_group_names = optional(list(string))
     private_dns_enabled  = optional(bool, false)
-    policy              = optional(map(any)) # map 형식으로 policy 받음
+    policy              = optional(any) # map 형식으로 policy 받음
 
     tags                 = map(string)
   }))
