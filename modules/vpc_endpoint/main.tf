@@ -47,7 +47,7 @@ resource "aws_vpc_endpoint" "this" {
   security_group_ids = each.value.security_group_ids
   private_dns_enabled = each.value.private_dns_enabled
 
-  policy            = jsoncode(each.value.policy)
+  policy            = jsonencode(each.value.policy)
 
   tags = each.value.tags
 }
