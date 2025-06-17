@@ -4,7 +4,7 @@ locals {
       vpc_id            = var.vpc_ids[ep.vpc_name]
       service_name      = ep.service_name
       vpc_endpoint_type = ep.vpc_endpoint_type
-      policy            = ep.policy != null ? jsonencode(file("${path.root}/policy_files/${ep.policy}.json")) : null 
+      policy            = ep.policy != null ? file("${path.root}/policy_files/${ep.policy}.json") : null 
 
       route_table_ids = ep.vpc_endpoint_type == "Gateway" ? (
         length(coalesce(lookup(ep, "route_table_names", []), [])) > 0 ?
