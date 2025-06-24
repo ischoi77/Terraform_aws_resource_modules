@@ -77,5 +77,5 @@ resource "aws_s3_bucket" "this" {
     }
   }
 
-  policy = each.value.policy_file != null ? file("${path.root}/s3_policy/${each.value.policy_file}") : null
+  policy = each.value.policy_file != null ? file("${path.root}/policy_files/${each.value.policy_file}") : null
 }
