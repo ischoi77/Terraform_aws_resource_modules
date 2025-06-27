@@ -11,7 +11,7 @@ variable "common_tags" {
 variable "buckets" {
   type = map(object({
     name              = string
-    acl               = string
+    acl               = optional(string)
     force_destroy     = bool
     enable_versioning = bool
     tags              = map(string)
