@@ -2,7 +2,7 @@ resource "aws_s3_bucket" "this" {
   for_each = var.buckets
 
   bucket = each.value.name
-  acl    = each.value.acl != null ? [each.value.acl] : null
+  acl    = each.value.acl
 
   force_destroy = each.value.force_destroy
   tags          = merge(var.common_tags, each.value.tags)
