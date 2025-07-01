@@ -13,7 +13,7 @@ locals {
     for user_key, user in local.users : [
       for policy in user.policies : {
         user_key   = user_key
-        policy_key = trim(policy)  # 공백 제거
+        policy_key = trimspace(policy)  # 공백 제거
       }
     ]
   ])
