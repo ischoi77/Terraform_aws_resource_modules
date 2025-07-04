@@ -3,6 +3,8 @@ resource "aws_vpc" "this" {
   for_each = var.vpcs
 
   cidr_block = each.value.cidr_block
+  enable_dns_support = true
+  enable_dns_hostnames = true
 
   tags = merge(
     var.common_tags,
