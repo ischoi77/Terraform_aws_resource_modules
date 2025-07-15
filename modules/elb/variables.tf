@@ -12,7 +12,7 @@ variable "common_tags" {
 variable "elbs" {
   description = "생성할 ELB 설정 목록"
   type = map(object({
-    name               = string
+    #name               = string
     availability_zones = list(string)
     listeners = list(object({
       instance_port      = number

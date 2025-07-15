@@ -1,7 +1,7 @@
 resource "aws_elb" "this" {
   for_each = var.elbs
 
-  name               = each.value.name
+  name               = each.key
   availability_zones = each.value.availability_zones
   security_groups    = lookup(each.value, "security_groups", null)
   subnets            = lookup(each.value, "subnets", null)
