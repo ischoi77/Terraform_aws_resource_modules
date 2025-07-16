@@ -201,7 +201,8 @@ resource "aws_lb" "this" {
 resource "aws_lb_listener" "this" {
   for_each = merge(flatten([
     for lb_key, lb in var.elbv2s : [
-      for listener_key, listener in lb.listeners : {
+      for listener_key, listener in lb.listeners :
+      {
         "${lb_key}-${listener_key}" => {
           lb_key           = lb_key
           port             = listener.port
@@ -226,8 +227,6 @@ resource "aws_lb_listener" "this" {
     target_group_arn = each.value.target_group_arn
   }
 }
-
-
 
 resource "aws_lb_listener_rule" "this" {
   for_each = merge(flatten([
@@ -301,4 +300,3 @@ resource "aws_lb_listener_rule" "this" {
     }
   }
 }
-
