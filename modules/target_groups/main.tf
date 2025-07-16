@@ -24,19 +24,15 @@ resource "aws_lb_target_group" "this" {
 resource "aws_lb_target_group_attachment" "this" {
   for_each = {
     for tg_name, tg in var.target_groups :
-    tg_name => tg.targets
-    if length(tg.targets) > 0
-  } |> flatten([
-    for tg_name, targets in . :
-    [
-      for idx, target in targets :
+    merge({
+      for idx, target in tg.targets :
       "${tg_name}-${idx}" => {
         target_group_name = tg_name
         target_id         = target.target_id
         port              = target.port
       }
-    ]
-  ])
+    }) if length(tg.targets) > 0
+  }
 
   target_group_arn = aws_lb_target_group.this[each.value.target_group_name].arn
   target_id        = each.value.target_id
