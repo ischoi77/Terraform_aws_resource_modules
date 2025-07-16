@@ -9,19 +9,19 @@ locals {
     lb_key => [for subnet_name in lb.lb.subnet_names : var.subnet_ids[subnet_name]]
   }
 
-  all_attachments = {
-    for lb_key, lb in var.elbv2s :
-    merge({
-      for target_group_name, target_group in lb.target_groups :
-      "${lb_key}::${target_group_name}" => {
+all_attachments = merge(flatten([
+  for lb_key, lb in var.elbv2s : [
+    for attachment_key, attachment in lb.attachments != null ? lb.attachments : {} : {
+      "${lb_key}::${attachment.target_group_name}::${attachment_key}" => {
         lb_key           = lb_key
-        target_group_key = target_group_name
-        target_group_arn = var.target_group_arns["${lb_key}::${target_group_name}"]
-        target_id        = try(target_group.target_id, null)
-        port             = target_group.port
+        target_group_key = attachment.target_group_name
+        target_group_arn = var.target_group_arns["${lb_key}::${attachment.target_group_name}"]
+        target_id        = attachment.target_id
+        port             = attachment.port
       }
-    })
-  }
+    }
+  ]
+]))
 
   listeners = merge(flatten([
     for lb_key, lb in var.elbv2s : [
