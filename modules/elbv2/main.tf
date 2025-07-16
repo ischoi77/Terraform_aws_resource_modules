@@ -208,7 +208,7 @@ resource "aws_lb_listener" "this" {
             protocol         = listener.protocol
             ssl_policy       = try(listener.ssl_policy, null)
             certificate_arn  = try(listener.certificate_arn, null)
-            target_group_arn = var.target_group_arns["${lb_key}::${listener.default_action.target_group_name}"]
+            target_group_arn = listener.default_action.target_group_name
             default_action   = listener.default_action
         }
       ]
@@ -224,7 +224,7 @@ resource "aws_lb_listener" "this" {
 
   default_action {
     type             = each.value.default_action.type
-    target_group_arn = each.value.target_group_arn
+    target_group_arn = var.target_group_arns[each.value.target_group_arn]
   }
 }
 
@@ -237,7 +237,7 @@ resource "aws_lb_listener_rule" "this" {
               listener_arn     = aws_lb_listener.this["${lb_key}::${rule.listener_key}"].arn
               priority         = rule.priority
               action           = rule.action
-              target_group_arn = var.target_group_arns["${lb_key}::${rule.action.target_group_name}"]
+              target_group_arn = rule.action.target_group_name
               conditions       = rule.conditions
           }
         ]
@@ -250,7 +250,7 @@ resource "aws_lb_listener_rule" "this" {
 
   action {
     type             = each.value.action.type
-    target_group_arn = each.value.target_group_arn
+    target_group_arn = var.target_group_arns[each.value.target_group_arn]
   }
 
   dynamic "condition" {
