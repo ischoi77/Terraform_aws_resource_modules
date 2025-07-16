@@ -21,7 +21,7 @@ locals {
         })
       }
     ]
-  ])))
+  ]))
 
   default_target_attachments = merge(flatten([
     for lb_key, lb in var.elbv2s : [
