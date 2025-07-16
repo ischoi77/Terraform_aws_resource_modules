@@ -1,27 +1,7 @@
-# variable "aws_region" {
-#   description = "AWS 리전"
-#   type        = string
-# }
-
-variable "common_tags" {
-  description = "모든 리소스에 공통으로 적용할 태그"
-  type        = map(string)
-}
-
-variable "sg_ids" {
-  description = "보안그룹 ID 매핑"
-  type = map(string)
-}
-
-variable "subnet_ids" {
-  description = "서브넷 이름 → ID 매핑"
-  type        = map(string)
-}
-
 variable "elbv2s" {
+  description = "각 로드 밸런서에 대한 통합 구성"
   type = map(object({
     lb = object({
-      name                        = string
       internal                    = bool
       load_balancer_type          = string
       security_group_names        = list(string)
@@ -38,33 +18,11 @@ variable "elbv2s" {
       tags = map(string)
     })
 
-    listeners = map(object({
-      port              = number
-      protocol          = string
-      ssl_policy        = optional(string)
-      certificate_arn   = optional(string)
-      default_action = object({
-        type             = string
-        target_group_key = string
-      })
-    }))
-
-    listener_rules = optional(map(object({
-      listener_key         = string
-      priority             = number
-      action = object({
-        type             = string
-        target_group_key = string
-      })
-      condition_path_patterns = list(string)
-    })))
-
     target_groups = map(object({
-      name        = string
       port        = number
       protocol    = string
       target_type = string
-      vpc_id      = string
+      vpc_name    = string
       health_check = object({
         enabled             = bool
         interval            = number
@@ -74,8 +32,41 @@ variable "elbv2s" {
         unhealthy_threshold = number
         healthy_threshold   = number
       })
-      tags = map(string)
+      tags       = map(string)
+      target_id  = optional(string)
     }))
+
+    listeners = map(object({
+      port            = number
+      protocol        = string
+      ssl_policy      = optional(string)
+      certificate_arn = optional(string)
+      default_action = object({
+        type              = string
+        target_group_key  = string
+      })
+    }))
+
+    listener_rules = optional(map(object({
+      listener_key = string
+      action = object({
+        type              = string
+        target_group_key  = string
+      })
+      conditions = object({
+        path_patterns   = optional(list(string))
+        host_headers    = optional(list(string))
+        http_headers    = optional(list(object({
+          name   = string
+          values = list(string)
+        })))
+        query_strings   = optional(list(object({
+          key   = optional(string)
+          value = string
+        })))
+        source_ips      = optional(list(string))
+      })
+    })))
 
     attachments = optional(map(object({
       target_group_key = string
@@ -85,4 +76,23 @@ variable "elbv2s" {
   }))
 }
 
+variable "sg_ids" {
+  description = "보안 그룹 이름 → ID 매핑"
+  type        = map(string)
+}
+
+variable "subnet_ids" {
+  description = "서브넷 이름 → ID 매핑"
+  type        = map(string)
+}
+
+variable "vpc_ids" {
+  description = "VPC 이름 → ID 매핑"
+  type        = map(string)
+}
+
+variable "common_tags" {
+  type    = map(string)
+  default = {}
+}
 
