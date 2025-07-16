@@ -1,69 +1,27 @@
 locals {
-  # 보안 그룹 ID 매핑
   lb_security_groups = {
     for lb_key, lb in var.elbv2s :
     lb_key => [for sg_name in lb.lb.security_group_names : var.sg_ids[sg_name]]
   }
 
-  # 서브넷 ID 매핑
   lb_subnets = {
     for lb_key, lb in var.elbv2s :
     lb_key => [for subnet_name in lb.lb.subnet_names : var.subnet_ids[subnet_name]]
   }
 
-  # Target Groups
-target_groups = merge(flatten([
-  for lb_key, lb in var.elbv2s : [
-    for tg_key, tg in lb.target_groups : {
-      "${lb_key}::${tg_key}" => merge(tg, {
-        lb_key = lb_key
-        vpc_id = var.vpc_ids[tg.vpc_name]
-      })
-    }
-  ]
-]))
-
-  default_target_attachments = merge(flatten([
-    for lb_key, lb in var.elbv2s : [
-      for target_group_key in distinct(concat(
-        [for l in values(lb.listeners) : l.default_action.target_group_key],
-        lb.listener_rules != null ? [for r in values(lb.listener_rules) : r.action.target_group_key] : []
-      )) : [
-        tomap({
-          "${lb_key}::${target_group_key}::default" = {
-            lb_key           = lb_key
-            target_group_key = target_group_key
-            target_group_arn = aws_lb_target_group.this["${lb_key}::${target_group_key}"].arn
-            target_id        = try(var.elbv2s[lb_key].target_groups[target_group_key].target_id, null)
-            port             = var.elbv2s[lb_key].target_groups[target_group_key].port
-          }
-        })
-      ]
-    ]
-  ]))
-
-  manual_target_attachments = merge(flatten([
-    for lb_key, lb in var.elbv2s : (
-      lb.attachments != null ? [
-        for name, attachment in lb.attachments : [
-          tomap({
-            "${lb_key}::${attachment.target_group_key}::${name}" = {
-              lb_key           = lb_key
-              target_group_key = attachment.target_group_key
-              target_group_arn = aws_lb_target_group.this["${lb_key}::${attachment.target_group_key}"].arn
-              target_id        = attachment.target_id
-              port             = attachment.port
-            }
-          })
-        ]
-      ] : []
-    )
-  ]))
-
-  all_attachments = merge(
-    local.default_target_attachments,
-    local.manual_target_attachments
-  )
+  all_attachments = {
+    for lb_key, lb in var.elbv2s :
+    merge({
+      for target_group_name, target_group in lb.target_groups :
+      "${lb_key}::${target_group_name}" => {
+        lb_key           = lb_key
+        target_group_key = target_group_name
+        target_group_arn = var.target_group_arns["${lb_key}::${target_group_name}"]
+        target_id        = try(target_group.target_id, null)
+        port             = target_group.port
+      }
+    })
+  }
 
   listeners = merge(flatten([
     for lb_key, lb in var.elbv2s : [
@@ -75,7 +33,7 @@ target_groups = merge(flatten([
             protocol         = listener.protocol
             ssl_policy       = try(listener.ssl_policy, null)
             certificate_arn  = try(listener.certificate_arn, null)
-            target_group_arn = aws_lb_target_group.this["${lb_key}::${listener.default_action.target_group_key}"].arn
+            target_group_arn = var.target_group_arns["${lb_key}::${listener.default_action.target_group_name}"]
             default_action   = listener.default_action
           }
         }
@@ -92,7 +50,7 @@ target_groups = merge(flatten([
               listener_arn     = aws_lb_listener.this["${lb_key}::${rule.listener_key}"].arn
               priority         = rule.priority
               action           = rule.action
-              target_group_arn = aws_lb_target_group.this["${lb_key}::${rule.action.target_group_key}"].arn
+              target_group_arn = var.target_group_arns["${lb_key}::${rule.action.target_group_name}"]
               conditions       = rule.conditions
             }
           }
@@ -103,6 +61,7 @@ target_groups = merge(flatten([
 }
 
 resource "aws_lb" "this" {
+  for_each           = var.elbv2s
   name               = each.key
   internal           = each.value.lb.internal
   load_balancer_type = each.value.lb.load_balancer_type
@@ -122,28 +81,6 @@ resource "aws_lb" "this" {
       enabled = access_logs.value.enabled
     }
   }
-}
-
-resource "aws_lb_target_group" "this" {
-  for_each = local.target_groups
-
-  name        = each.key
-  port        = each.value.port
-  protocol    = each.value.protocol
-  target_type = each.value.target_type
-  vpc_id      = each.value.vpc_id
-
-  health_check {
-    enabled             = each.value.health_check.enabled
-    interval            = each.value.health_check.interval
-    path                = each.value.health_check.path
-    protocol            = each.value.health_check.protocol
-    timeout             = each.value.health_check.timeout
-    unhealthy_threshold = each.value.health_check.unhealthy_threshold
-    healthy_threshold   = each.value.health_check.healthy_threshold
-  }
-
-  tags = merge(each.value.tags, var.common_tags)
 }
 
 resource "aws_lb_listener" "this" {
@@ -234,4 +171,3 @@ resource "aws_lb_target_group_attachment" "this" {
     ignore_changes        = [target_id]
   }
 }
-
