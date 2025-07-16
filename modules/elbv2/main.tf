@@ -203,7 +203,6 @@ resource "aws_lb_listener" "this" {
     for lb_key, lb in var.elbv2s : [
       for listener_key, listener in lb.listeners : [
         {
-          "${lb_key}::${listener_key}" = {
             lb_key           = lb_key
             port             = listener.port
             protocol         = listener.protocol
@@ -211,7 +210,6 @@ resource "aws_lb_listener" "this" {
             certificate_arn  = try(listener.certificate_arn, null)
             target_group_arn = var.target_group_arns["${lb_key}::${listener.default_action.target_group_name}"]
             default_action   = listener.default_action
-          }
         }
       ]
     ]
@@ -236,13 +234,11 @@ resource "aws_lb_listener_rule" "this" {
       lb.listener_rules != null ? [
         for rule_key, rule in lb.listener_rules : [
           {
-            "${lb_key}::${rule.priority}" = {
               listener_arn     = aws_lb_listener.this["${lb_key}::${rule.listener_key}"].arn
               priority         = rule.priority
               action           = rule.action
               target_group_arn = var.target_group_arns["${lb_key}::${rule.action.target_group_name}"]
               conditions       = rule.conditions
-            }
           }
         ]
       ] : []
