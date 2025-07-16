@@ -15,7 +15,7 @@ all_attachments = flatten([
       for attachment_key, attachment in lb.attachments : {
         lb_key           = lb_key
         target_group_key = attachment.target_group_name
-        target_group_arn = var.target_group_arns["${lb_key}::${attachment.target_group_name}"]
+        target_group_arn = try(var.target_group_arns["${lb_key}::${attachment.target_group_name}"], null)
         target_id        = attachment.target_id
         port             = attachment.port
       }
@@ -35,7 +35,7 @@ all_attachments = flatten([
             protocol         = listener.protocol
             ssl_policy       = try(listener.ssl_policy, null)
             certificate_arn  = try(listener.certificate_arn, null)
-            target_group_arn = var.target_group_arns["${lb_key}::${listener.default_action.target_group_name}"]
+            target_group_arn = try(var.target_group_arns["${lb_key}::${listener.default_action.target_group_name}"], null)
             default_action   = listener.default_action
           }
         }
@@ -52,7 +52,7 @@ all_attachments = flatten([
               listener_arn     = aws_lb_listener.this["${lb_key}::${rule.listener_key}"].arn
               priority         = rule.priority
               action           = rule.action
-              target_group_arn = var.target_group_arns["${lb_key}::${rule.action.target_group_name}"]
+              target_group_arn = try(var.target_group_arns["${lb_key}::${rule.action.target_group_name}"], null)
               conditions       = rule.conditions
             }
           }
