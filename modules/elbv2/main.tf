@@ -12,7 +12,7 @@ locals {
 all_attachments = merge(flatten([
   for lb_key, lb in var.elbv2s : (
     lb.attachments != null ? [
-      for attachment_key, attachment in lb.attachments : tomap({
+      for attachment_key, attachment in lb.attachments : {
         "${lb_key}::${attachment.target_group_name}::${attachment_key}" => {
           lb_key           = lb_key
           target_group_key = attachment.target_group_name
@@ -20,11 +20,10 @@ all_attachments = merge(flatten([
           target_id        = attachment.target_id
           port             = attachment.port
         }
-      })
+      }
     ] : []
   )
 ]))
-
 
 
   listeners = merge(flatten([
