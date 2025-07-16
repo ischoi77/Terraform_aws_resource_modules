@@ -46,14 +46,14 @@ output "listener_rules" {
   }
 }
 
-output "target_group_attachments" {
-  description = "Target Group에 연결된 Attachment 정보"
-  value = {
-    for att_key, att in aws_lb_target_group_attachment.this :
-    att_key => {
-      target_group_arn = att.target_group_arn
-      target_id        = att.target_id
-      port             = att.port
-    }
-  }
-}
+# output "target_group_attachments" {
+#   description = "Target Group에 연결된 Attachment 정보"
+#   value = {
+#     for att_key, att in aws_lb_target_group_attachment.this :
+#     att_key => {
+#       target_group_arn = att.target_group_arn
+#       target_id        = att.target_id
+#       port             = att.port
+#     }
+#   }
+# }
