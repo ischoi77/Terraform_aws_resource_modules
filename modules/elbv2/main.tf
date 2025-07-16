@@ -15,7 +15,7 @@ all_attachments = flatten([
       for attachment_key, attachment in lb.attachments : {
         lb_key           = lb_key
         target_group_key = attachment.target_group_name
-        target_group_arn = try(var.target_group_arns["${lb_key}::${attachment.target_group_name}"], null)
+        target_group_arn = var.target_group_arns["${lb_key}::${attachment.target_group_name}"]
         target_id        = attachment.target_id
         port             = attachment.port
       }
