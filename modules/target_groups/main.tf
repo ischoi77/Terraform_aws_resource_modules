@@ -19,3 +19,31 @@ resource "aws_lb_target_group" "this" {
 
   tags = merge(each.value.tags, var.common_tags)
 }
+
+
+resource "aws_lb_target_group_attachment" "this" {
+  for_each = {
+    for tg_name, tg in var.target_groups :
+    tg_name => tg.targets
+    if length(tg.targets) > 0
+  } |> flatten([
+    for tg_name, targets in . :
+    [
+      for idx, target in targets :
+      "${tg_name}-${idx}" => {
+        target_group_name = tg_name
+        target_id         = target.target_id
+        port              = target.port
+      }
+    ]
+  ])
+
+  target_group_arn = aws_lb_target_group.this[each.value.target_group_name].arn
+  target_id        = each.value.target_id
+  port             = each.value.port
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes        = [target_id]
+  }
+}

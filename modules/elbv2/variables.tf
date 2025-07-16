@@ -51,11 +51,11 @@ variable "elbv2s" {
       })
     })))
 
-    attachments = optional(map(object({
-      target_group_name = string
-      target_id         = string
-      port              = number
-    })))
+    # attachments = optional(map(object({
+    #   target_group_name = string
+    #   target_id         = string
+    #   port              = number
+    # })))
   }))
 }
 
