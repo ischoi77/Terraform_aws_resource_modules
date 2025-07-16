@@ -10,18 +10,18 @@ output "load_balancers" {
   }
 }
 
-output "target_groups" {
-  description = "각 ELB별 Target Group 정보"
-  value = {
-    for tg_key, tg in aws_lb_target_group.this :
-    tg_key => {
-      arn     = tg.arn
-      name    = tg.name
-      port    = tg.port
-      vpc_id  = tg.vpc_id
-    }
-  }
-}
+# output "target_groups" {
+#   description = "각 ELB별 Target Group 정보"
+#   value = {
+#     for tg_key, tg in aws_lb_target_group.this :
+#     tg_key => {
+#       arn     = tg.arn
+#       name    = tg.name
+#       port    = tg.port
+#       vpc_id  = tg.vpc_id
+#     }
+#   }
+# }
 
 output "listeners" {
   description = "각 ELB별 Listener 정보"
