@@ -9,7 +9,7 @@ locals {
     lb_key => [for subnet_name in lb.lb.subnet_names : var.subnet_ids[subnet_name]]
   }
 
-all_attachments = flatten([
+all_attachments = merge(flatten([
   for lb_key, lb in var.elbv2s : (
     lb.attachments != null ? [
       for attachment_key, attachment in lb.attachments : {
@@ -22,7 +22,7 @@ all_attachments = flatten([
       }
     ] : []
   )
-])
+]))
 
 
   listeners = merge(flatten([
