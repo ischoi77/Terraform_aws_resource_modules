@@ -43,24 +43,20 @@ all_attachments = merge(flatten([
     ]
   ]))
 
-  listener_rules = merge(flatten([
-    for lb_key, lb in var.elbv2s : (
-      lb.listener_rules != null ? [
-        for rule_key, rule in lb.listener_rules : [
-          {
-            "${lb_key}::${rule.priority}" = {
-              listener_arn     = aws_lb_listener.this["${lb_key}::${rule.listener_key}"].arn
-              priority         = rule.priority
-              action           = rule.action
-              target_group_arn = var.target_group_arns["${lb_key}::${rule.action.target_group_name}"]
-              conditions       = rule.conditions
-            }
-          }
-        ]
-      ] : []
-    )
-  ]))
-}
+all_attachments = flatten([
+  for lb_key, lb in var.elbv2s : (
+    lb.attachments != null ? [
+      for attachment_key, attachment in lb.attachments : {
+        lb_key           = lb_key
+        target_group_key = attachment.target_group_name
+        target_group_arn = var.target_group_arns["${lb_key}::${attachment.target_group_name}"]
+        target_id        = attachment.target_id
+        port             = attachment.port
+      }
+    ] : []
+  )
+])
+
 
 resource "aws_lb" "this" {
   for_each           = var.elbv2s
