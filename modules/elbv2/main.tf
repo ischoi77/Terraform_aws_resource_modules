@@ -69,32 +69,36 @@ locals {
 
   listeners = merge(flatten([
     for lb_key, lb in var.elbv2s : [
-      for listener_key, listener in lb.listeners : {
-        "${lb_key}::${listener_key}" => {
-          lb_key           = lb_key
-          port             = listener.port
-          protocol         = listener.protocol
-          ssl_policy       = try(listener.ssl_policy, null)
-          certificate_arn  = try(listener.certificate_arn, null)
-          target_group_arn = aws_lb_target_group.this["${lb_key}::${listener.default_action.target_group_key}"].arn
-          default_action   = listener.default_action
+      for listener_key, listener in lb.listeners : [
+        {
+          "${lb_key}::${listener_key}" = {
+            lb_key           = lb_key
+            port             = listener.port
+            protocol         = listener.protocol
+            ssl_policy       = try(listener.ssl_policy, null)
+            certificate_arn  = try(listener.certificate_arn, null)
+            target_group_arn = aws_lb_target_group.this["${lb_key}::${listener.default_action.target_group_key}"].arn
+            default_action   = listener.default_action
+          }
         }
-      }
+      ]
     ]
   ]))
 
   listener_rules = merge(flatten([
     for lb_key, lb in var.elbv2s : (
       lb.listener_rules != null ? [
-        for rule_key, rule in lb.listener_rules : {
-          "${lb_key}::${rule.priority}" => {
-            listener_arn     = aws_lb_listener.this["${lb_key}::${rule.listener_key}"].arn
-            priority         = rule.priority
-            action           = rule.action
-            target_group_arn = aws_lb_target_group.this["${lb_key}::${rule.action.target_group_key}"].arn
-            conditions       = rule.conditions
+        for rule_key, rule in lb.listener_rules : [
+          {
+            "${lb_key}::${rule.priority}" = {
+              listener_arn     = aws_lb_listener.this["${lb_key}::${rule.listener_key}"].arn
+              priority         = rule.priority
+              action           = rule.action
+              target_group_arn = aws_lb_target_group.this["${lb_key}::${rule.action.target_group_key}"].arn
+              conditions       = rule.conditions
+            }
           }
-        }
+        ]
       ] : []
     )
   ]))
