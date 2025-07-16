@@ -12,17 +12,36 @@ locals {
   }
 
   # Target Groups
-  target_groups = merge([
-    for lb_key, lb in var.elbv2s : {
-      for tg_key, tg in lb.target_groups :
-      "${lb_key}::${tg_key}" => merge(tg, {
-        lb_key  = lb_key,
-        vpc_id  = var.vpc_ids[tg.vpc_name]
-      })
-    }
-  ]...))
+  target_groups = merge(flatten([
+    for lb_key, lb in var.elbv2s : [
+      for tg_key, tg in lb.target_groups : {
+        "${lb_key}::${tg_key}" => merge(tg, {
+          lb_key = lb_key
+          vpc_id = var.vpc_ids[tg.vpc_name]
+        })
+      }
+    ]
+  ])))
 
-  # 수동 Attachments
+  default_target_attachments = merge(flatten([
+    for lb_key, lb in var.elbv2s : [
+      for target_group_key in distinct(concat(
+        [for l in values(lb.listeners) : l.default_action.target_group_key],
+        lb.listener_rules != null ? [for r in values(lb.listener_rules) : r.action.target_group_key] : []
+      )) : [
+        tomap({
+          "${lb_key}::${target_group_key}::default" = {
+            lb_key           = lb_key
+            target_group_key = target_group_key
+            target_group_arn = aws_lb_target_group.this["${lb_key}::${target_group_key}"].arn
+            target_id        = try(var.elbv2s[lb_key].target_groups[target_group_key].target_id, null)
+            port             = var.elbv2s[lb_key].target_groups[target_group_key].port
+          }
+        })
+      ]
+    ]
+  ]))
+
   manual_target_attachments = merge(flatten([
     for lb_key, lb in var.elbv2s : (
       lb.attachments != null ? [
@@ -39,9 +58,9 @@ locals {
         ]
       ] : []
     )
-  ])...)
+  ]))
 
-  all_attachments = merge(local.default_target_attachments, local.manual_target_attachments)
+  all_attachments = merge(default_target_attachments, manual_target_attachments)
 }
 
 resource "aws_lb" "this" {
