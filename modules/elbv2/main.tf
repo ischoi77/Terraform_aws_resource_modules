@@ -15,12 +15,12 @@ locals {
   target_groups = merge(flatten([
     for lb_key, lb in var.elbv2s : [
       for tg_key, tg in lb.target_groups : [
-        {
+        tomap({
           "${lb_key}::${tg_key}" = merge(tg, {
             lb_key = lb_key
             vpc_id = var.vpc_ids[tg.vpc_name]
           })
-        }
+        })
       ]
     ]
   ]))
@@ -130,7 +130,7 @@ resource "aws_lb" "this" {
 resource "aws_lb_target_group" "this" {
   for_each = local.target_groups
 
-  name        = each.value.name
+  name        = each.key
   port        = each.value.port
   protocol    = each.value.protocol
   target_type = each.value.target_type
