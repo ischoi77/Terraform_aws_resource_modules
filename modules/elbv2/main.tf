@@ -9,22 +9,6 @@ locals {
     lb_key => [for subnet_name in lb.lb.subnet_names : var.subnet_ids[subnet_name]]
   }
 
-all_attachments = merge(flatten([
-  for lb_key, lb in var.elbv2s : (
-    lb.attachments != null ? [
-      for attachment_key, attachment in lb.attachments : {
-        "${lb_key}::${attachment.target_group_name}::${attachment_key}" => {
-          lb_key           = lb_key
-          target_group_arn = var.target_group_arns["${lb_key}::${attachment.target_group_name}"]
-          target_id        = attachment.target_id
-          port             = attachment.port
-        }
-      }
-    ] : []
-  )
-]))
-
-
   listeners = merge(flatten([
     for lb_key, lb in var.elbv2s : [
       for listener_key, listener in lb.listeners : [
@@ -56,6 +40,7 @@ all_attachments = flatten([
     ] : []
   )
 ])
+}
 
 
 resource "aws_lb" "this" {
