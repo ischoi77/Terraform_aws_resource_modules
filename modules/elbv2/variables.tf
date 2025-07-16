@@ -70,10 +70,7 @@ variable "subnet_ids" {
   type        = map(string)
 }
 
-variable "vpc_ids" {
-  description = "VPC 이름 → ID 매핑"
-  type        = map(string)
-}
+
 
 variable "common_tags" {
   type    = map(string)

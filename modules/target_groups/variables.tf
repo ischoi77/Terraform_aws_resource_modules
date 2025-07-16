@@ -4,7 +4,7 @@ variable "target_groups" {
     port        = number
     protocol    = string
     target_type = string
-    vpc_id      = string
+    vpc_name     = string
     health_check = object({
       enabled             = bool
       interval            = number
@@ -21,4 +21,10 @@ variable "target_groups" {
 variable "common_tags" {
   type    = map(string)
   default = {}
+}
+
+
+variable "vpc_ids" {
+  description = "VPC 이름 → ID 매핑"
+  type        = map(string)
 }
