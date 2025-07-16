@@ -25,7 +25,7 @@ resource "aws_lb_target_group_attachment" "this" {
   for_each = merge(flatten([
     for tg_name, tg in var.target_groups : [
       for idx, target in tg.targets : {
-        "${tg_name}-${idx}" => {
+        "${tg_name}-${idx}" = {
           target_group_name = tg_name
           target_id         = target.target_id
           port              = target.port
