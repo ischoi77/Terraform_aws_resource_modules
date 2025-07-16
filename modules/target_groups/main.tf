@@ -1,5 +1,5 @@
 locals {
-  tg_attachment_entries = [
+  tg_attachment_entries = flatten([
     for tg_name, tg in var.target_groups : [
       for idx, target in tg.targets : {
         key = "${tg_name}-${idx}"
@@ -10,7 +10,7 @@ locals {
         }
       }
     ]
-  ] |> flatten()
+  ])
 
   target_group_attachments = {
     for entry in local.tg_attachment_entries :
