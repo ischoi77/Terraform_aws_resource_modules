@@ -1,59 +1,44 @@
 locals {
   # 보안 그룹 ID 매핑
   lb_security_groups = {
-    for lb_name, lb in var.elbv2s :
-    lb_name => [for sg_name in lb.lb.security_group_names : var.sg_ids[sg_name]]
+    for lb_key, lb in var.elbv2s :
+    lb_key => [for sg_name in lb.lb.security_group_names : var.sg_ids[sg_name]]
   }
 
   # 서브넷 ID 매핑
   lb_subnets = {
-    for lb_name, lb in var.elbv2s :
-    lb_name => [for subnet_name in lb.lb.subnet_names : var.subnet_ids[subnet_name]]
-  }
-
-  # VPC ID 매핑
-  tg_vpcs = {
-    for tg_key, tg in merge([
-      for lb_name, lb in var.elbv2s : {
-        for tg_name, tg in lb.target_groups :
-        tg_name => tg
-      }
-    ]...) :
-    tg_key => var.vpc_ids[tg.vpc_name]
+    for lb_key, lb in var.elbv2s :
+    lb_key => [for subnet_name in lb.lb.subnet_names : var.subnet_ids[subnet_name]]
   }
 
   # Target Groups
   target_groups = merge([
-    for lb_name, lb in var.elbv2s : {
-      for tg_name, tg in lb.target_groups :
-      tg_name => merge(tg, {
-        lb_key = lb_name,
-        vpc_id = var.vpc_ids[tg.vpc_name]
-      })
+    for lb_key, lb in var.elbv2s : {
+      for tg_key, tg in lb.target_groups :
+      "${lb_key}::${tg_key}" => merge(tg, { lb_key = lb_key })
     }
   ]...)
 
   # Listeners
   listeners = merge([
-    for lb_name, lb in var.elbv2s : {
+    for lb_key, lb in var.elbv2s : {
       for listener_key, l in lb.listeners :
-      "${lb_name}::${listener_key}" => merge(l, {
-        lb_key           = lb_name,
-        target_group_arn = aws_lb_target_group.this[l.default_action.target_group_key].arn
+      "${lb_key}::${listener_key}" => merge(l, {
+        lb_key           = lb_key
+        target_group_arn = aws_lb_target_group.this["${lb_key}::${l.default_action.target_group_key}"].arn
       })
     }
   ]...)
 
   # Listener Rules
   listener_rules = merge([
-    for lb_name, lb in var.elbv2s : (
+    for lb_key, lb in var.elbv2s : (
       lb.listener_rules != null ? {
         for rule_key, rule in lb.listener_rules :
-        "${lb_name}-${rule_key}" => merge(rule, {
-          lb_key           = lb_name,
-          listener_arn     = aws_lb_listener.this["${lb_name}::${rule.listener_key}"].arn,
-          target_group_arn = aws_lb_target_group.this[rule.action.target_group_key].arn,
-          priority         = tonumber(rule_key)
+        "${lb_key}::${rule_key}" => merge(rule, {
+          lb_key           = lb_key
+          listener_arn     = aws_lb_listener.this["${lb_key}::${rule.listener_key}"].arn
+          target_group_arn = aws_lb_target_group.this["${lb_key}::${rule.action.target_group_key}"].arn
         })
       } : {}
     )
@@ -61,44 +46,34 @@ locals {
 
   # 기본 연결용 Attachments
   default_target_attachments = merge(flatten([
-    for lb_name, lb in var.elbv2s : [
+    for lb_key, lb in var.elbv2s : [
       for target_group_key in distinct(concat(
         [for l in values(lb.listeners) : l.default_action.target_group_key],
         lb.listener_rules != null ? [for r in values(lb.listener_rules) : r.action.target_group_key] : []
       )) : [
         {
-          "${lb_name}::${target_group_key}::default" => {
-            lb_key           = lb_name,
+          "${lb_key}::${target_group_key}::default" => {
+            lb_key           = lb_key,
             target_group_key = target_group_key,
-            target_group_arn = aws_lb_target_group.this[target_group_key].arn,
-            target_id        = try(var.elbv2s[lb_name].target_groups[target_group_key].target_id, null),
-            port             = var.elbv2s[lb_name].target_groups[target_group_key].port
+            target_group_arn = aws_lb_target_group.this["${lb_key}::${target_group_key}"].arn,
+            target_id        = try(var.elbv2s[lb_key].target_groups[target_group_key].target_id, null),
+            port             = var.elbv2s[lb_key].target_groups[target_group_key].port
           }
         }
       ]
     ]
   ])...)
-        "${lb_name}::${target_group_key}::default" => {
-          lb_key           = lb_name,
-          target_group_key = target_group_key,
-          target_group_arn = aws_lb_target_group.this[target_group_key].arn,
-          target_id        = try(var.elbv2s[lb_name].target_groups[target_group_key].target_id, null),
-          port             = var.elbv2s[lb_name].target_groups[target_group_key].port
-        }
-      }
-    ]
-  ])...)
 
   # 수동 Attachments
   manual_target_attachments = merge(flatten([
-    for lb_name, lb in var.elbv2s : (
+    for lb_key, lb in var.elbv2s : (
       lb.attachments != null ? [
         for name, attachment in lb.attachments : {
-          "${lb_name}::${attachment.target_group_key}::${name}" => {
-            lb_key           = lb_name,
-            target_group_key = attachment.target_group_key,
-            target_group_arn = aws_lb_target_group.this[attachment.target_group_key].arn,
-            target_id        = attachment.target_id,
+          "${lb_key}::${attachment.target_group_key}::${name}" => {
+            lb_key           = lb_key
+            target_group_key = attachment.target_group_key
+            target_group_arn = aws_lb_target_group.this["${lb_key}::${attachment.target_group_key}"].arn
+            target_id        = attachment.target_id
             port             = attachment.port
           }
         }
@@ -111,7 +86,7 @@ locals {
 
 resource "aws_lb" "this" {
   for_each           = var.elbv2s
-  name               = each.key
+  name               = each.value.lb.name
   internal           = each.value.lb.internal
   load_balancer_type = each.value.lb.load_balancer_type
   security_groups    = local.lb_security_groups[each.key]
@@ -135,7 +110,7 @@ resource "aws_lb" "this" {
 resource "aws_lb_target_group" "this" {
   for_each = local.target_groups
 
-  name        = each.key
+  name        = each.value.name
   port        = each.value.port
   protocol    = each.value.protocol
   target_type = each.value.target_type
@@ -242,3 +217,4 @@ resource "aws_lb_target_group_attachment" "this" {
     ignore_changes        = [target_id]
   }
 }
+
