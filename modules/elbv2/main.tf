@@ -12,20 +12,14 @@ locals {
   }
 
   # Target Groups
-  # Target Groups
-  target_groups = merge(flatten([
-  for lb_key, lb in var.elbv2s : [
-    for tg_key, tg in lb.target_groups : [
-      {
-        "${lb_key}::${tg_key}" = merge(tg, {
-          lb_key = lb_key
-          vpc_id = var.vpc_ids[tg.vpc_name]
-        })
-      }
-    ]
-  ]
-]))
-
+  target_groups = {
+    for lb_key, lb in var.elbv2s :
+    for tg_key, tg in lb.target_groups :
+    "${lb_key}::${tg_key}" => merge(tg, {
+      lb_key  = lb_key
+      vpc_id  = var.vpc_ids[tg.vpc_name]
+    })
+  }
 
   default_target_attachments = merge(flatten([
     for lb_key, lb in var.elbv2s : [
@@ -107,7 +101,6 @@ locals {
 }
 
 resource "aws_lb" "this" {
-  for_each           = var.elbv2s
   name               = each.key
   internal           = each.value.lb.internal
   load_balancer_type = each.value.lb.load_balancer_type
