@@ -106,7 +106,7 @@ locals {
 
 resource "aws_lb" "this" {
   for_each           = var.elbv2s
-  name               = each.value.lb.name
+  name               = each.key
   internal           = each.value.lb.internal
   load_balancer_type = each.value.lb.load_balancer_type
   security_groups    = local.lb_security_groups[each.key]
