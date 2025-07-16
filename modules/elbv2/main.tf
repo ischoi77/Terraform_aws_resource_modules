@@ -65,15 +65,17 @@ locals {
       for target_group_key in distinct(concat(
         [for l in values(lb.listeners) : l.default_action.target_group_key],
         lb.listener_rules != null ? [for r in values(lb.listener_rules) : r.action.target_group_key] : []
-      )) : {
-        "${lb_name}::${target_group_key}::default" => {
-          lb_key           = lb_name,
-          target_group_key = target_group_key,
-          target_group_arn = aws_lb_target_group.this[target_group_key].arn,
-          target_id        = try(var.elbv2s[lb_name].target_groups[target_group_key].target_id, null),
-          port             = var.elbv2s[lb_name].target_groups[target_group_key].port
+      )) : [
+            {
+            "${lb_name}::${target_group_key}::default" => {
+            lb_key           = lb_name,
+            target_group_key = target_group_key,
+            target_group_arn = aws_lb_target_group.this[target_group_key].arn,
+            target_id        = try(var.elbv2s[lb_name].target_groups[target_group_key].target_id, null),
+            port             = var.elbv2s[lb_name].target_groups[target_group_key].port
+            }
         }
-      }
+      ]
     ]
   ])...)
 
@@ -217,8 +219,9 @@ resource "aws_lb_listener_rule" "this" {
 }
 
 resource "aws_lb_target_group_attachment" "this" {
-  for_each = local.all_attachments
-  count    = each.value.target_id != null ? 1 : 0
+  for_each = {
+    for k, v in local.all_attachments : k => v if v.target_id != null
+  }
 
   target_group_arn = each.value.target_group_arn
   target_id        = each.value.target_id
