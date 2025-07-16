@@ -14,12 +14,14 @@ locals {
   # Target Groups
   target_groups = merge(flatten([
     for lb_key, lb in var.elbv2s : [
-      for tg_key, tg in lb.target_groups : {
-        "${lb_key}::${tg_key}" => merge(tg, {
-          lb_key = lb_key
-          vpc_id = var.vpc_ids[tg.vpc_name]
-        })
-      }
+      for tg_key, tg in lb.target_groups : [
+        {
+          "${lb_key}::${tg_key}" = merge(tg, {
+            lb_key = lb_key
+            vpc_id = var.vpc_ids[tg.vpc_name]
+          })
+        }
+      ]
     ]
   ]))
 
