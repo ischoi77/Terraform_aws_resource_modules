@@ -51,15 +51,15 @@ locals {
         [for l in values(lb.listeners) : l.default_action.target_group_key],
         lb.listener_rules != null ? [for r in values(lb.listener_rules) : r.action.target_group_key] : []
       )) : [
-        {
-          "${lb_key}::${target_group_key}::default" => {
-            lb_key           = lb_key,
-            target_group_key = target_group_key,
-            target_group_arn = aws_lb_target_group.this["${lb_key}::${target_group_key}"].arn,
-            target_id        = try(var.elbv2s[lb_key].target_groups[target_group_key].target_id, null),
+        tomap({
+          "${lb_key}::${target_group_key}::default" = {
+            lb_key           = lb_key
+            target_group_key = target_group_key
+            target_group_arn = aws_lb_target_group.this["${lb_key}::${target_group_key}"].arn
+            target_id        = try(var.elbv2s[lb_key].target_groups[target_group_key].target_id, null)
             port             = var.elbv2s[lb_key].target_groups[target_group_key].port
           }
-        }
+        })
       ]
     ]
   ])...)
@@ -68,15 +68,17 @@ locals {
   manual_target_attachments = merge(flatten([
     for lb_key, lb in var.elbv2s : (
       lb.attachments != null ? [
-        for name, attachment in lb.attachments : {
-          "${lb_key}::${attachment.target_group_key}::${name}" => {
-            lb_key           = lb_key
-            target_group_key = attachment.target_group_key
-            target_group_arn = aws_lb_target_group.this["${lb_key}::${attachment.target_group_key}"].arn
-            target_id        = attachment.target_id
-            port             = attachment.port
-          }
-        }
+        for name, attachment in lb.attachments : [
+          tomap({
+            "${lb_key}::${attachment.target_group_key}::${name}" = {
+              lb_key           = lb_key
+              target_group_key = attachment.target_group_key
+              target_group_arn = aws_lb_target_group.this["${lb_key}::${attachment.target_group_key}"].arn
+              target_id        = attachment.target_id
+              port             = attachment.port
+            }
+          })
+        ]
       ] : []
     )
   ])...)
