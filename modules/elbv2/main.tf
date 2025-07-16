@@ -13,14 +13,14 @@ locals {
 
   # Target Groups
   target_groups = merge(flatten([
-$1for lb_key, lb in var.elbv2s : [
-$2for tg_key, tg in lb.target_groups : [
-$3{
+    for lb_key, lb in var.elbv2s : [
+    for tg_key, tg in lb.target_groups : [
+    {
           "${lb_key}::${tg_key}" = merge(tg, {
             lb_key = lb_key
             vpc_id = var.vpc_ids[tg.vpc_name]
           })
-        $1}$2]$3]$3]))
+        }]]]))
 
   default_target_attachments = merge(flatten([
     for lb_key, lb in var.elbv2s : [
