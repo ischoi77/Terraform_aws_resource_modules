@@ -1,16 +1,23 @@
 locals {
-  target_group_attachments = merge(flatten([
+  tg_attachment_entries = [
     for tg_name, tg in var.target_groups : [
-      for idx, target in tg.targets : tomap({
-        "${tg_name}-${idx}" = {
+      for idx, target in tg.targets : {
+        key = "${tg_name}-${idx}"
+        value = {
           target_group_name = tg_name
           target_id         = target.target_id
           port              = target.port
         }
-      })
+      }
     ]
-  ]))
+  ] |> flatten()
+
+  target_group_attachments = {
+    for entry in local.tg_attachment_entries :
+    entry.key => entry.value
+  }
 }
+
 
 resource "aws_lb_target_group" "this" {
   for_each = var.target_groups
