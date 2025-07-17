@@ -38,7 +38,7 @@ locals {
 resource "aws_eip" "this" {
   for_each = local.nat_gateways_eip_required
 
-  vpc = true
+  #vpc = true
   
   tags = merge(
     var.common_tags,
