@@ -132,5 +132,5 @@ resource "aws_security_group_rule" "this" {
     lookup(local.sg_lookup, each.value.rule["SG_ID_or_CIDR"], null)
   )
 
-  description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+  description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
