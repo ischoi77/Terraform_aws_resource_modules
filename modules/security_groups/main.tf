@@ -166,13 +166,12 @@ resource "aws_security_group_rule" "self" {
   )
 
   self        = true
-  description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+  description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
 
 # 2) CIDR / SG ID / Peering 룰 전용
 resource "aws_security_group_rule" "others" {
-  for_each = local.other_rules
-
+  for_each         = local.other_rules
   security_group_id = aws_security_group.this[each.value.sg_key].id
   type              = lower(each.value.rule.Direction) == "inbound" ? "ingress" : "egress"
   protocol          = each.value.rule.Protocol
@@ -188,11 +187,11 @@ resource "aws_security_group_rule" "others" {
       tonumber(each.value.rule.Port)
   )
 
-  # 1) CIDR: cidr_blocks
-  # 2) '<sg->...' 또는 '123456789012/sg-...' 형식: source_security_group_id에 그대로 할당
-  # 3) 그 외: lookup
-  cidr_blocks = can(regex("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$", each.value.rule["SG_ID_or_CIDR"])) ?
-    [each.value.rule["SG_ID_or_CIDR"]] : null
+  cidr_blocks = (
+    can(regex("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$", each.value.rule["SG_ID_or_CIDR"])) ?
+      [each.value.rule["SG_ID_or_CIDR"]] :
+      null
+  )
 
   source_security_group_id = (
     can(regex("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$", each.value.rule["SG_ID_or_CIDR"])) ? null :
@@ -203,5 +202,5 @@ resource "aws_security_group_rule" "others" {
     lookup(local.sg_lookup, each.value.rule["SG_ID_or_CIDR"], null)
   )
 
-  description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
+  description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
