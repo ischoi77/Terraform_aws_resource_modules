@@ -100,7 +100,6 @@ resource "aws_security_group_rule" "this" {
   type              = lower(each.value.rule.Direction) == "inbound" ? "ingress" : "egress"
   protocol          = each.value.rule.Protocol
 
-  # Port 처리: 단일 값 또는 범위
   from_port = (
     length(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)) > 0 ?
       tonumber(element(regexall("^(\\d+)-(\\d+)$", each.value.rule.Port)[0], 0)) :
@@ -112,10 +111,9 @@ resource "aws_security_group_rule" "this" {
       tonumber(each.value.rule.Port)
   )
 
-  # 1) self 룰: SG_ID_or_CIDR == sg_key → 둘 다 null
-  # 2) CIDR 형식(10.0.0.0/nn) → cidr_blocks에 할당
-  # 3) '<sg->...' 또는 '123456789012/sg-...' 형식 → source_security_group_id에 그대로 할당
-  # 4) 그 외 → local.sg_lookup에서 SG_Name lookup
+  # self 속성을 항상 제공: self 룰일 땐 true, 아니면 false
+  self = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key
+
   cidr_blocks = (
     each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? null :
     can(regex("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$", each.value.rule["SG_ID_or_CIDR"])) ? [each.value.rule["SG_ID_or_CIDR"]] :
