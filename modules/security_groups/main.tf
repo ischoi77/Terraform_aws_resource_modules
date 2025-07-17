@@ -116,17 +116,21 @@ resource "aws_security_group_rule" "this" {
   # 2) CIDR 형식(10.0.0.0/nn) → cidr_blocks에 할당
   # 3) '<sg->...' 또는 '123456789012/sg-...' 형식 → source_security_group_id에 그대로 할당
   # 4) 그 외 → local.sg_lookup에서 SG_Name lookup
-  cidr_blocks = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? null :
+  cidr_blocks = (
+    each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? null :
     can(regex("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$", each.value.rule["SG_ID_or_CIDR"])) ? [each.value.rule["SG_ID_or_CIDR"]] :
     null
+  )
 
-  source_security_group_id = each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? null :
+  source_security_group_id = (
+    each.value.rule["SG_ID_or_CIDR"] == each.value.sg_key ? null :
     can(regex("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$", each.value.rule["SG_ID_or_CIDR"])) ? null :
     (
       startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ||
       can(regex("^[0-9]+/sg-[0-9a-fA-F]+$", each.value.rule["SG_ID_or_CIDR"]))
     ) ? each.value.rule["SG_ID_or_CIDR"] :
     lookup(local.sg_lookup, each.value.rule["SG_ID_or_CIDR"], null)
+  )
 
   description = trim(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
