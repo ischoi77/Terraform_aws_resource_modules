@@ -11,9 +11,9 @@ variable "common_tags" {
 variable "buckets" {
   type = map(object({
     name              = string
-    acl               = optional(string)
+    #acl               = string
     force_destroy     = bool
-    enable_versioning = bool
+    #enable_versioning = bool
     tags              = map(string)
 
     logging = object({
@@ -33,24 +33,6 @@ variable "buckets" {
         days = number
       })
     }))
-
-    sse_config = object({
-      sse_algorithm     = string
-      kms_master_key_id = optional(string)
-    })
-
-    cors_rules = list(object({
-      allowed_headers = list(string)
-      allowed_methods = list(string)
-      allowed_origins = list(string)
-      expose_headers  = optional(list(string))
-      max_age_seconds = optional(number)
-    }))
-
-    website = object({
-      index_document = string
-      error_document = string
-    })
 
     policy_file = string
   }))
