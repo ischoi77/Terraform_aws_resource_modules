@@ -116,7 +116,7 @@ resource "aws_security_group_rule" "others" {
   source_security_group_id = (
     can(regex("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$", each.value.rule["SG_ID_or_CIDR"])) ?
       null :
-      each.value.rule["SG_ID_or_CIDR"]
+      lookup(local.sg_lookup, each.value.rule["SG_ID_or_CIDR"], null)
   )
 
   description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
