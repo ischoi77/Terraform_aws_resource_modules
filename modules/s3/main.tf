@@ -51,7 +51,7 @@ resource "aws_s3_bucket_policy" "this" {
   }
 
   bucket = aws_s3_bucket.this[each.key].id
-  policy = file("${path.root}/s3_policy/${each.value.policy_file}")
+  policy = file("${path.root}/policy_files/${each.value.policy_file}")
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "this" {
