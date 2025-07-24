@@ -12,3 +12,10 @@ variable "common_tags" {
   type        = map(string)
   default     = {}
 }
+
+
+
+variable "group_names" {
+  description = "List of valid group names (from groups module)"
+  type        = list(string)
+}

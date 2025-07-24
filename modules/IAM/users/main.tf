@@ -5,18 +5,26 @@ locals {
     for u in local.users_raw : u.username => {
       username = u.username
       policies = split(",", u.policies)
+      groups   = split(",", u.groups)
     }
   }
 
-  # 사용자-정책 조합 (username + policy)
   user_policy_pairs = flatten([
     for user_key, user in local.users : [
       for policy in user.policies : {
         user_key   = user_key
-        policy_key = trimspace(policy)  # 공백 제거
+        policy_key = trimspace(policy)
       }
     ]
   ])
+
+  user_group_map = {
+    for user_key, user in local.users : user_key => [
+      for g in user.groups :
+      trimspace(g)
+      if contains(var.group_names, trimspace(g))
+    ]
+  }
 }
 
 resource "aws_iam_user" "this" {
@@ -34,4 +42,11 @@ resource "aws_iam_user_policy_attachment" "this" {
 
   user       = aws_iam_user.this[each.value.user_key].name
   policy_arn = var.policy_arns[each.value.policy_key]
+}
+
+resource "aws_iam_user_group_membership" "this" {
+  for_each = local.user_group_map
+
+  user   = aws_iam_user.this[each.key].name
+  groups = each.value
 }
