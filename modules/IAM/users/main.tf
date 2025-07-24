@@ -4,8 +4,8 @@ locals {
   users = {
     for u in local.users_raw : u.username => {
       username = u.username
-      policies = split(",", u.policies)
-      groups   = split(",", u.groups)
+      policies = u.policies == "" ? [] : split(",", u.policies)
+      groups   = u.groups == "" ? [] : split(",", u.groups)
     }
   }
 
