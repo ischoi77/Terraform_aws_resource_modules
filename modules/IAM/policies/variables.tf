@@ -1,28 +1,34 @@
-variable "policy_dir" {
-  description = "Relative path to directory containing JSON policy files"
-  type        = string
-}
+# variable "policy_dir" {
+#   description = "Relative path to directory containing JSON policy files"
+#   type        = string
+# }
 
 
 variable "policies" {
   description = <<EOT
-Unified policy config:
+Unified policy config including root directory and managed policy names:
 {
+  policy_dir = "path/to/policies"
+
   user = {
-    aws_managed = ["AmazonEC2ReadOnlyAccess"]
-  },
+    aws_managed = [...]
+  }
+
   group = {
-    aws_managed = ["AdministratorAccess"]
-  },
+    aws_managed = [...]
+  }
+
   role = {
-    aws_managed = ["AmazonS3FullAccess"]
+    aws_managed = [...]
   }
 }
 EOT
+
   type = object({
-    user  = optional(object({ aws_managed = optional(list(string), []) }), {}),
-    group = optional(object({ aws_managed = optional(list(string), []) }), {}),
+    policy_dir = string
+
+    user  = optional(object({ aws_managed = optional(list(string), []) }), {})
+    group = optional(object({ aws_managed = optional(list(string), []) }), {})
     role  = optional(object({ aws_managed = optional(list(string), []) }), {})
   })
-  default = {}
 }
