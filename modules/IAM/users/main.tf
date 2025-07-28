@@ -56,6 +56,14 @@ locals {
     ]
     if length(user.groups) > 0
   }
+  
+  group_users_map = {
+    for group in distinct(flatten([for groups in local.user_group_map : groups])) :
+    group => [
+      for user, groups in local.user_group_map :
+      user if contains(groups, group)
+    ]
+  }
 }
 
 

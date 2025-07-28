@@ -28,3 +28,8 @@ output "user_groups_map" {
     username => membership.groups
   }
 }
+
+output "group_users_map" {
+  description = "Map of group name to list of IAM users who belong to that group"
+  value       = local.group_users_map
+}
