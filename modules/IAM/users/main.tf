@@ -1,3 +1,32 @@
+# locals {
+#   users_raw = csvdecode(file(var.user_csv_file))
+
+#   users = {
+#     for u in local.users_raw : u.username => {
+#       username = u.username
+#       policies = u.policies == "" ? [] : split(",", u.policies)
+#       groups   = u.groups == "" ? [] : split(",", u.groups)
+#     }
+#   }
+
+#   user_policy_pairs = flatten([
+#     for user_key, user in local.users : [
+#       for policy in user.policies : {
+#         user_key   = user_key
+#         policy_key = trimspace(policy)
+#       }
+#     ]
+#   ])
+
+#   user_group_map = {
+#     for user_key, user in local.users : user_key => [
+#       for g in user.groups :
+#       trimspace(g)
+#       if contains(var.group_names, trimspace(g))
+#     ]
+#   }
+# }
+
 locals {
   users_raw = csvdecode(file(var.user_csv_file))
 
@@ -5,7 +34,7 @@ locals {
     for u in local.users_raw : u.username => {
       username = u.username
       policies = u.policies == "" ? [] : split(",", u.policies)
-      groups   = u.groups == "" ? [] : split(",", u.groups)
+      groups   = u.groups   == "" ? [] : split(",", u.groups)
     }
   }
 
@@ -19,13 +48,17 @@ locals {
   ])
 
   user_group_map = {
-    for user_key, user in local.users : user_key => [
+    for user_key, user in local.users :
+    user_key => [
       for g in user.groups :
       trimspace(g)
       if contains(var.group_names, trimspace(g))
     ]
+    if length(user.groups) > 0
   }
 }
+
+
 
 resource "aws_iam_user" "this" {
   for_each = local.users
