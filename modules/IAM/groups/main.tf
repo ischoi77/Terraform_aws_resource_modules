@@ -19,7 +19,7 @@ locals {
       for group_key, group in local.groups : [
         for policy_name in group.policies : {
           key        = "${group_key}::${policy_name}"
-          group_name = group.name
+          group_key  = group_key
           policy_arn = lookup(local.all_policy_arns, policy_name, null)
         }
       ]
@@ -37,6 +37,6 @@ resource "aws_iam_group" "this" {
 resource "aws_iam_group_policy_attachment" "this" {
   for_each = local.group_policy_attachments
 
-  group      = aws_iam_group.this[each.value.group_name].name
+  group      = aws_iam_group.this[each.value.group_key].name
   policy_arn = each.value.policy_arn
 }

@@ -52,7 +52,7 @@ locals {
       )
     }
   }
-  
+
   all_policy_arns = merge(
     var.managed_policy_arns,
     var.custom_policy_arns
@@ -65,7 +65,7 @@ locals {
       for user_key, user in local.users : [
         for policy_name in user.policies : {
           key        = "${user_key}::${policy_name}"
-          user_name  = user.username
+          user_key  = user_key
           policy_arn = lookup(local.all_policy_arns, policy_name, null)
         }
       ]
@@ -105,7 +105,7 @@ resource "aws_iam_user" "this" {
 resource "aws_iam_user_policy_attachment" "this" {
   for_each = local.user_policy_attachments
 
-  user       = aws_iam_user.this[each.value.user_name].name
+  user       = aws_iam_user.this[each.value.user_key].name
   policy_arn = each.value.policy_arn
 }
 

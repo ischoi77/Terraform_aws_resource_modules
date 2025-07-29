@@ -55,7 +55,7 @@ locals {
       for role_key, role in local.roles : [
         for policy_name in role.policy_names : {
           key        = "${role_key}::${policy_name}"
-          role_name  = role.name
+          role_key  = role_key
           policy_arn = lookup(local.all_policy_arns, policy_name, null)
         }
       ]
@@ -85,6 +85,6 @@ resource "aws_iam_role" "this" {
 resource "aws_iam_role_policy_attachment" "this" {
   for_each = local.role_policy_attachments
 
-  role       = aws_iam_role.this[each.value.role_name].name
+  role       = aws_iam_role.this[each.value.role_key].name
   policy_arn = each.value.policy_arn
 }
