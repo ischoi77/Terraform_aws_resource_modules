@@ -13,11 +13,7 @@ locals {
 
   # AWS 관리형 정책들과 충돌하지 않는 사용자 정의 정책만 필터링
   custom_policy_map = {
-    for name, v in local.all_policy_map :
-    name => v if not (
-      name in var.policies.managed_policy_names || 
-      name in var.policies.managed_service_role_policy_names
-      )
+    for name, v in local.all_policy_map : name => v if not (name in var.policies.managed_policy_names || name in var.policies.managed_service_role_policy_names)
   }
 
   skipped_policy_names = [
