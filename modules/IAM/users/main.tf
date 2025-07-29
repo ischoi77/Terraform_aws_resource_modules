@@ -52,6 +52,11 @@ locals {
       )
     }
   }
+  
+  all_policy_arns = merge(
+    var.managed_policy_arns,
+    var.custom_policy_arns
+  )
 
 
 
