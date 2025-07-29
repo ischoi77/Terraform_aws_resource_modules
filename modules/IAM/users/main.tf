@@ -85,6 +85,8 @@ resource "aws_iam_user" "this" {
   name = each.value.username
   tags = merge(var.common_tags, each.value.tags)
 
+}
+
 resource "aws_iam_user_policy_attachment" "this" {
   for_each = {
     for pair in local.user_policy_pairs :
