@@ -37,13 +37,14 @@
 locals {
   roles_raw = csvdecode(file(var.roles_csv_file))
 
-  parse_tags = function(tag_str) => (
+  parse_tags = function(tag_str) {
     tag_str == "" ? {} :
-    { for pair in split(";", tag_str) :
+    {
+      for pair in split(";", tag_str) :
       trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
     }
-  )
-  
+  }
+
   roles = {
     for r in local.roles_raw : r.role_name => {
       assume_file      = r.assume_policy_file

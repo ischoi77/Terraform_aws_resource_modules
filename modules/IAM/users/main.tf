@@ -30,12 +30,13 @@
 locals {
   users_raw = csvdecode(file(var.user_csv_file))
 
-  parse_tags = function(tag_str) => (
+  parse_tags = function(tag_str) {
     tag_str == "" ? {} :
-    { for pair in split(";", tag_str) :
+    {
+      for pair in split(";", tag_str) :
       trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
     }
-  )
+  }
 
   users = {
     for u in local.users_raw : u.username => {
