@@ -70,7 +70,6 @@ locals {
         }
       ]
     ]) : attachment.key => attachment
-    if attachment.policy_arn != null
   }
 
   user_group_map = {

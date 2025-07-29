@@ -60,7 +60,6 @@ locals {
         }
       ]
     ]) : attachment.key => attachment
-    if attachment.policy_arn != null
   }
 }
 
