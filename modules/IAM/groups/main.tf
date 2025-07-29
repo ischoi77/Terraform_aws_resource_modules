@@ -23,6 +23,10 @@ locals {
       }
     ]
   ])
+
+  group_policy_attachments = {
+    for a in local.group_policy_attachments_flat : a.key => a
+  }
 }
 
 resource "aws_iam_group" "this" {
@@ -40,7 +44,7 @@ resource "aws_iam_group" "this" {
 
 # 그룹 정책 연결 (data source 기반)
 resource "aws_iam_group_policy_attachment" "this" {
-  for_each = local.group_policy_attachments_flat
+  for_each = local.group_policy_attachments
 
   group      = aws_iam_group.this[each.value.group_name].group_name
   policy_arn = each.value.policy_arn
