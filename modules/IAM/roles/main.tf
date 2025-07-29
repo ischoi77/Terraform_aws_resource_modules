@@ -52,7 +52,7 @@ locals {
       tags = (
         r.tags == "" ? {} :
         {
-          for pair in split(";", u.tags) :
+          for pair in split(";", r.tags) :
           trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
         }
       )
