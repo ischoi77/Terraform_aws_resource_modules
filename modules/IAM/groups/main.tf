@@ -3,12 +3,12 @@ locals {
 
   # group_name => list of policy names
   groups = {
-    for g in local.raw_group_data :
-    g.group_name => {
-      policies = split(",", g.policies)
+    for g in local.groups_raw : g.group_name => {
+      name     = g.group_name
+      policies = g.policies == "" ? [] : split(",", g.policies)
     }
   }
-
+  
   all_policy_arns = merge(
     var.managed_policy_arns,
     var.custom_policy_arns
