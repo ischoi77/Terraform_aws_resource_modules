@@ -14,17 +14,20 @@ locals {
     var.custom_policy_arns
   )
 
+  group_policy_attachments_flat = flatten([
+    for group_name, group in local.groups : [
+      for policy_name in group.policies : {
+        key        = "${group_name}::${policy_name}"
+        group_name = group_name
+        policy_arn = lookup(local.all_policy_arns, trimspace(policy_name), null)
+      }
+    ]
+  ])
+
   group_policy_attachments = {
-    for attachment in flatten([
-      for group_key, group in local.groups : [
-        for policy_name in group.policies : {
-          key        = "${group_key}::${policy_name}"
-          group_key  = group_key
-          policy_arn = lookup(local.all_policy_arns, policy_name, null)
-        }
-      ]
-    ]) : attachment.key => attachment
-    if attachment.policy_arn != null
+    for a in local.group_policy_attachments_flat :
+    a.key => a
+    if a.policy_arn != null
   }
 }
 
@@ -37,6 +40,6 @@ resource "aws_iam_group" "this" {
 resource "aws_iam_group_policy_attachment" "this" {
   for_each = local.group_policy_attachments
 
-  group      = each.value.group_key
+  group      = aws_iam_group.this[each.value.group_name].name
   policy_arn = each.value.policy_arn
 }
