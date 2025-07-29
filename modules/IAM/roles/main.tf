@@ -60,7 +60,11 @@ locals {
     }
   }
 
-
+  all_policy_arns = merge(
+    var.managed_policy_arns,
+    var.managed_service_role_policy_arns,
+    var.custom_policy_arns
+  )
 
   # Role → 경로
   assume_policy_paths = {
@@ -88,22 +92,17 @@ locals {
 #     }
 #   }
 
-  managed_policy_pairs = flatten([
-    for role_name, role in local.roles_with_policy_file : [
-      for policy_name in role.managed_policies : {
-        key        = "${role_name}::${trimspace(policy_name)}"
-        role_name  = role_name
-        policy_arn = var.managed_policy_arns[trimspace(policy_name)]
-      }
-    ]
-  ])
-
-  managed_policy_map = {
-    for item in local.managed_policy_pairs :
-    item.key => {
-      role_name  = item.role_name
-      policy_arn = item.policy_arn
-    }
+  role_policy_attachments = {
+    for attachment in flatten([
+      for role_key, role in local.roles : [
+        for policy_name in role.policy_names : {
+          key        = "${role_key}::${policy_name}"
+          role_name  = role.name
+          policy_arn = lookup(local.all_policy_arns, policy_name, null)
+        }
+      ]
+    ]) : attachment.key => attachment
+    if attachment.policy_arn != null
   }
 }
 
@@ -125,8 +124,8 @@ resource "aws_iam_role" "this" {
 #   policy = each.value.policy_json
 # }
 
-resource "aws_iam_role_policy_attachment" "managed" {
-  for_each = local.managed_policy_map
+resource "aws_iam_role_policy_attachment" "this" {
+  for_each = local.role_policy_attachments
 
   role       = aws_iam_role.this[each.value.role_name].name
   policy_arn = each.value.policy_arn

@@ -9,8 +9,18 @@ variable "roles_csv_file" {
 # }
 
 variable "managed_policy_arns" {
+  description = "Map of AWS managed IAM policy names to ARNs"
   type        = map(string)
-  description = "Map of policy name to ARN"
+}
+
+variable "custom_policy_arns" {
+  description = "Map of custom IAM policy names to ARNs"
+  type        = map(string)
+}
+
+variable "managed_service_role_policy_arns" {
+  description = "Map of AWS service-linked role policy ARNs"
+  type        = map(string)
 }
 
 variable "common_tags" {
