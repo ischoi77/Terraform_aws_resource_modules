@@ -37,6 +37,6 @@ resource "aws_iam_group" "this" {
 resource "aws_iam_group_policy_attachment" "this" {
   for_each = local.group_policy_attachments
 
-  group      = aws_iam_group.this[each.value.group_key].name
+  group      = each.value.group_key
   policy_arn = each.value.policy_arn
 }
