@@ -1,5 +1,5 @@
 locals {
-  # 설정된 디렉토리에서 JSON 정책 파일 수집
+  # 모든 정책 파일 목록
   policy_files = fileset(var.policies.policy_dir, "*.json")
 
   all_policy_map = {
@@ -11,24 +11,21 @@ locals {
     }
   }
 
-  # AWS 관리형 정책들과 충돌하지 않는 사용자 정의 정책만 필터링
-  # custom_policy_map = {
-  #   for name, v in local.all_policy_map : name => v if not (name in var.policies.managed_policy_names || name in var.policies.managed_service_role_policy_names)
-  # }
-custom_policy_map = {
-  for name, v in local.all_policy_map :
-  name => v if !(
-    (
-      name in var.policies.managed_policy_names
-    ) || (
-      name in var.policies.managed_service_role_policy_names
-    )
-  )
-}
-
-  skipped_policy_names = [
+  # 중복된 정책 이름 여부 (true이면 중복됨)
+  is_conflicted_policy_name = {
     for name in keys(local.all_policy_map) :
-    name if name in var.policies.managed_policy_names || name in var.policies.managed_service_role_policy_names
+    name => contains(var.policies.managed_policy_names, name) || contains(var.policies.managed_service_role_policy_names, name)
+  }
+
+  # 중복되지 않은 사용자 정의 정책만 필터링
+  custom_policy_map = {
+    for name, v in local.all_policy_map :
+    name => v if local.is_conflicted_policy_name[name] == false
+  }
+
+  # 중복되어 제외된 이름 목록
+  skipped_policy_names = [
+    for name, skip in local.is_conflicted_policy_name : name if skip
   ]
 
   managed_policy_arns = {
@@ -41,6 +38,7 @@ custom_policy_map = {
     name => "arn:aws:iam::aws:policy/aws-service-role/${name}"
   }
 }
+
 
 resource "aws_iam_policy" "this" {
   for_each = local.custom_policy_map
