@@ -30,6 +30,13 @@
 locals {
   users_raw = csvdecode(file(var.user_csv_file))
 
+  parse_tags = function(tag_str) => (
+    tag_str == "" ? {} :
+    { for pair in split(";", tag_str) :
+      trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
+    }
+  )
+
   users = {
     for u in local.users_raw : u.username => {
       username = u.username
@@ -39,13 +46,7 @@ locals {
     }
   }
 
-  parse_tags = function(tag_string) => (
-    tag_string == "" ? {} :
-    {
-      for pair in split(",", tag_string) :
-      split("=", pair)[0] => split("=", pair)[1]
-    }
-  )
+
 
   user_policy_pairs = flatten([
     for user_key, user in local.users : [

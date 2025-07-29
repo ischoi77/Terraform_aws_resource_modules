@@ -37,6 +37,13 @@
 locals {
   roles_raw = csvdecode(file(var.roles_csv_file))
 
+  parse_tags = function(tag_str) => (
+    tag_str == "" ? {} :
+    { for pair in split(";", tag_str) :
+      trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
+    }
+  )
+  
   roles = {
     for r in local.roles_raw : r.role_name => {
       assume_file      = r.assume_policy_file
@@ -46,13 +53,7 @@ locals {
     }
   }
 
-  parse_tags = function(tag_string) => (
-    tag_string == "" ? {} :
-    {
-      for pair in split(",", tag_string) :
-      split("=", pair)[0] => split("=", pair)[1]
-    }
-  )
+
 
   # Role → 경로
   assume_policy_paths = {
