@@ -3,9 +3,14 @@ variable "user_csv_file" {
   description = "Path to the user CSV file"
 }
 
-variable "policy_arns" {
+variable "custom_policy_arns" {
+  description = "Map of custom IAM policy names to ARNs"
   type        = map(string)
-  description = "Map of policy name to ARN, from policies module output"
+}
+
+variable "managed_policy_arns" {
+  description = "Map of AWS managed IAM policy names to ARNs"
+  type        = map(string)
 }
 
 variable "common_tags" {

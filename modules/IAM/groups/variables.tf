@@ -3,7 +3,12 @@ variable "group_csv_file" {
   type        = string
 }
 
-variable "policy_arns" {
-  description = "Map of policy name => policy ARN (from policies module)"
+variable "custom_policy_arns" {
+  description = "Map of custom IAM policy names to ARNs"
+  type        = map(string)
+}
+
+variable "managed_policy_arns" {
+  description = "Map of AWS managed IAM policy names to ARNs"
   type        = map(string)
 }

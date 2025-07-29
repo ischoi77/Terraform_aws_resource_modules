@@ -55,14 +55,18 @@ locals {
 
 
 
-  user_policy_pairs = flatten([
-    for user_key, user in local.users : [
-      for policy in user.policies : {
-        user_key   = user_key
-        policy_key = trimspace(policy)
-      }
-    ]
-  ])
+  user_policy_attachments = {
+    for attachment in flatten([
+      for user_key, user in local.users : [
+        for policy_name in user.policies : {
+          key        = "${user_key}::${policy_name}"
+          user_name  = user.username
+          policy_arn = lookup(local.all_policy_arns, policy_name, null)
+        }
+      ]
+    ]) : attachment.key => attachment
+    if attachment.policy_arn != null
+  }
 
   user_group_map = {
     for user_key, user in local.users :
@@ -94,13 +98,10 @@ resource "aws_iam_user" "this" {
 }
 
 resource "aws_iam_user_policy_attachment" "this" {
-  for_each = {
-    for pair in local.user_policy_pairs :
-    "${pair.user_key}-${pair.policy_key}" => pair
-  }
+  for_each = local.user_policy_attachments
 
-  user       = aws_iam_user.this[each.value.user_key].name
-  policy_arn = var.policy_arns[each.value.policy_key]
+  user       = aws_iam_user.this[each.value.user_name].name
+  policy_arn = each.value.policy_arn
 }
 
 resource "aws_iam_user_group_membership" "this" {
