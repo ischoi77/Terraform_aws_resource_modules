@@ -37,19 +37,25 @@
 locals {
   roles_raw = csvdecode(file(var.roles_csv_file))
 
-  parse_tags = function(tag_str) {
-    tag_str == "" ? {} :
-    {
-      for pair in split(";", tag_str) :
-      trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
-    }
-  }
+#   parse_tags = function(tag_str) {
+#     tag_str == "" ? {} :
+#     {
+#       for pair in split(";", tag_str) :
+#       trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
+#     }
+#   }
 
   roles = {
     for r in local.roles_raw : r.role_name => {
       assume_file      = r.assume_policy_file
       managed_policies = r.managed_policies == "" ? [] : split(",", r.managed_policies)
-      tags              = local.parse_tags(r.tags)
+      tags = (
+        r.tags == "" ? {} :
+        {
+          for pair in split(";", u.tags) :
+          trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
+        }
+      )
     #   inline_policies  = r.inline_policies  == "" ? [] : split(",", r.inline_policies)
     }
   }
@@ -107,7 +113,7 @@ resource "aws_iam_role" "this" {
 
   name               = each.key
   assume_role_policy = file(each.value.assume_policy_path)
-  tags               = var.common_tags
+  tags = merge(var.common_tags, each.value.tags)
 }
 
 

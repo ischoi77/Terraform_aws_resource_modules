@@ -30,20 +30,26 @@
 locals {
   users_raw = csvdecode(file(var.user_csv_file))
 
-  parse_tags = function(tag_str) {
-    tag_str == "" ? {} :
-    {
-      for pair in split(";", tag_str) :
-      trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
-    }
-  }
+  # parse_tags = function(tag_str) {
+  #   tag_str == "" ? {} :
+  #   {
+  #     for pair in split(";", tag_str) :
+  #     trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
+  #   }
+  # }
 
   users = {
     for u in local.users_raw : u.username => {
       username = u.username
       policies = u.policies == "" ? [] : split(",", u.policies)
       groups   = u.groups   == "" ? [] : split(",", u.groups)
-      tags     = local.parse_tags(u.tags)
+      tags = (
+        u.tags == "" ? {} :
+        {
+          for pair in split(";", u.tags) :
+          trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
+        }
+      )
     }
   }
 
