@@ -15,14 +15,17 @@ locals {
   # custom_policy_map = {
   #   for name, v in local.all_policy_map : name => v if not (name in var.policies.managed_policy_names || name in var.policies.managed_service_role_policy_names)
   # }
-  custom_policy_map = {
-    for name, v in local.all_policy_map :
-    name => v if !(
-      name in var.policies.managed_policy_names || 
+custom_policy_map = {
+  for name, v in local.all_policy_map :
+  name => v if !(
+    (
+      name in var.policies.managed_policy_names
+    ) || (
       name in var.policies.managed_service_role_policy_names
     )
-  }
-  
+  )
+}
+
   skipped_policy_names = [
     for name in keys(local.all_policy_map) :
     name if name in var.policies.managed_policy_names || name in var.policies.managed_service_role_policy_names
