@@ -1,5 +1,5 @@
 locals {
-  group_raw = csvdecode(file(var.group_csv_file))
+  groups_raw = csvdecode(file(var.group_csv_file))
 
   # group_name => list of policy names
   groups = {
