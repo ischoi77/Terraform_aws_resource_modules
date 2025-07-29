@@ -39,25 +39,36 @@ locals {
 
   roles = {
     for r in local.roles_raw : r.role_name => {
+      assume_file      = r.assume_policy_file
       managed_policies = r.managed_policies == "" ? [] : split(",", r.managed_policies)
+      tags              = local.parse_tags(r.tags)
     #   inline_policies  = r.inline_policies  == "" ? [] : split(",", r.inline_policies)
     }
   }
 
+  parse_tags = function(tag_string) => (
+    tag_string == "" ? {} :
+    {
+      for pair in split(",", tag_string) :
+      split("=", pair)[0] => split("=", pair)[1]
+    }
+  )
+
   # Role → 경로
-  assume_policy_files = {
-    for role_name in keys(local.roles) :
-    role_name => "${path.root}/assume_role_policy_files/${role_name}.json"
+  assume_policy_paths = {
+    for role_name, role in local.roles :
+    role_name => "${path.root}/assume_role_policy_files/${trimspace(role.assume_file)}.json"
   }
 
-  # 파일 존재하는 Role만 필터링
+  # 파일 존재 여부 확인
   roles_with_policy_file = {
     for role_name, role in local.roles :
     role_name => merge(role, {
-      assume_policy_path = local.assume_policy_files[role_name]
+      assume_policy_path = local.assume_policy_paths[role_name]
     })
-    if fileexists(local.assume_policy_files[role_name])
+    if fileexists(local.assume_policy_paths[role_name])
   }
+
 
 #   inline_policy_map = {
 #     for role_name, role in local.roles_with_policy_file :
@@ -69,12 +80,21 @@ locals {
 #     }
 #   }
 
+  managed_policy_pairs = flatten([
+    for role_name, role in local.roles_with_policy_file : [
+      for policy_name in role.managed_policies : {
+        key        = "${role_name}::${trimspace(policy_name)}"
+        role_name  = role_name
+        policy_arn = var.managed_policy_arns[trimspace(policy_name)]
+      }
+    ]
+  ])
+
   managed_policy_map = {
-    for role_name, role in local.roles_with_policy_file :
-    for policy_name in role.managed_policies :
-    "${role_name}::${trimspace(policy_name)}" => {
-      role_name  = role_name
-      policy_arn = var.managed_policy_arns[trimspace(policy_name)]
+    for item in local.managed_policy_pairs :
+    item.key => {
+      role_name  = item.role_name
+      policy_arn = item.policy_arn
     }
   }
 }

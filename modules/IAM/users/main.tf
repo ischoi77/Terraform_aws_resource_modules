@@ -35,8 +35,17 @@ locals {
       username = u.username
       policies = u.policies == "" ? [] : split(",", u.policies)
       groups   = u.groups   == "" ? [] : split(",", u.groups)
+      tags     = local.parse_tags(u.tags)
     }
   }
+
+  parse_tags = function(tag_string) => (
+    tag_string == "" ? {} :
+    {
+      for pair in split(",", tag_string) :
+      split("=", pair)[0] => split("=", pair)[1]
+    }
+  )
 
   user_policy_pairs = flatten([
     for user_key, user in local.users : [
@@ -56,7 +65,7 @@ locals {
     ]
     if length(user.groups) > 0
   }
-  
+
   group_users_map = {
     for group in distinct(flatten([for groups in local.user_group_map : groups])) :
     group => [
@@ -72,8 +81,7 @@ resource "aws_iam_user" "this" {
   for_each = local.users
 
   name = each.value.username
-  tags = var.common_tags
-}
+  tags = merge(var.common_tags, each.value.tags)
 
 resource "aws_iam_user_policy_attachment" "this" {
   for_each = {

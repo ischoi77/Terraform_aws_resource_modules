@@ -1,23 +1,25 @@
-output "user_policy_arns" {
-  value = merge(
-    { for k, v in aws_iam_policy.user : k => v.arn },
-    { for k, v in data.aws_iam_policy.aws_managed_user : k => v.arn }
-  )
-}
-
-output "group_policy_arns" {
-  value = merge(
-    { for k, v in aws_iam_policy.group : k => v.arn },
-    { for k, v in data.aws_iam_policy.aws_managed_group : k => v.arn }
-  )
-}
-
-output "role_inline_policies" {
-  value = local.role_policy_map
-}
-
-output "aws_managed_role_policy_arns" {
+output "custom_policy_arns" {
   value = {
-    for k, v in data.aws_iam_policy.aws_managed_role : k => v.arn
+    for k, v in aws_iam_policy.this :
+    k => v.arn
   }
+}
+
+output "custom_policy_json_map" {
+  value = {
+    for k, v in local.custom_policy_map :
+    k => v.policy
+  }
+}
+
+output "skipped_policy_names" {
+  value = local.skipped_policy_names
+}
+
+output "managed_policy_arns" {
+  value = local.managed_policy_arns
+}
+
+output "managed_service_role_policy_arns" {
+  value = local.managed_service_role_policy_arns
 }
