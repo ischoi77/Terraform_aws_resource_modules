@@ -39,8 +39,8 @@ locals {
 
   roles = {
     for r in local.roles_raw : r.role_name => {
-      assume_file      = r.assume_policy_file
-      managed_policies = r.managed_policies == "" ? [] : split(",", r.managed_policies)
+      assume_file      = r.assume_policy_file,
+      managed_policies = r.managed_policies == "" ? [] : split(",", r.managed_policies),
       tags              = local.parse_tags(r.tags)
     #   inline_policies  = r.inline_policies  == "" ? [] : split(",", r.inline_policies)
     }

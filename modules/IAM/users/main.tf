@@ -32,9 +32,9 @@ locals {
 
   users = {
     for u in local.users_raw : u.username => {
-      username = u.username
-      policies = u.policies == "" ? [] : split(",", u.policies)
-      groups   = u.groups   == "" ? [] : split(",", u.groups)
+      username = u.username,
+      policies = u.policies == "" ? [] : split(",", u.policies),
+      groups   = u.groups   == "" ? [] : split(",", u.groups),
       tags     = local.parse_tags(u.tags)
     }
   }
