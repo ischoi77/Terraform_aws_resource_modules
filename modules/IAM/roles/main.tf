@@ -1,54 +1,12 @@
-# locals {
-#   roles_raw = csvdecode(file(var.roles_csv_file))
-
-#   roles = {
-#     for r in local.roles_raw : r.role_name => {
-#       managed_policies = r.managed_policies == "" ? [] : split(",", r.managed_policies)
-#       inline_policies  = r.inline_policies  == "" ? [] : split(",", r.inline_policies)
-#     }
-#   }
-
-#   # assume_role_policy_file path: ./assume_role_policy_files/<role>.json
-#   assume_role_policies = {
-#     for role_name in keys(local.roles) :
-#     role_name => file("${path.root}/assume_role_policy_files/${role_name}.json")
-#   }
-
-#   inline_policy_map = {
-#     for role_name, role in local.roles :
-#     for policy_name in role.inline_policies :
-#     "${role_name}::${trimspace(policy_name)}" => {
-#       role_name   = role_name
-#       policy_name = trimspace(policy_name)
-#       policy_json = var.inline_policies[trimspace(policy_name)]
-#     }
-#   }
-
-#   managed_policy_map = {
-#     for role_name, role in local.roles :
-#     for policy_name in role.managed_policies :
-#     "${role_name}::${trimspace(policy_name)}" => {
-#       role_name  = role_name
-#       policy_arn = var.managed_policy_arns[trimspace(policy_name)]
-#     }
-#   }
-# }
-
 locals {
   roles_raw = csvdecode(file(var.roles_csv_file))
 
-#   parse_tags = function(tag_str) {
-#     tag_str == "" ? {} :
-#     {
-#       for pair in split(";", tag_str) :
-#       trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
-#     }
-#   }
-
   roles = {
     for r in local.roles_raw : r.role_name => {
-      assume_file      = r.assume_policy_file
-      managed_policies = r.managed_policies == "" ? [] : split(",", r.managed_policies)
+      name         = r.role_name
+      assume_file  = r.assume_policy_file
+      description  = try(r.description, null)
+      policy_names = r.policies == "" ? [] : split(",", r.policies)
       tags = (
         r.tags == "" ? {} :
         {
