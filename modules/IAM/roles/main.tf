@@ -1,17 +1,28 @@
 locals {
   roles_raw = csvdecode(file(var.roles_csv_file))
 
-  roles = {
-    for r in local.roles_raw : r.name => {
-      name                 = r.name
-      description          = try(r.description, null)
-      assume_file          = r.assume_policy_file
-      policy_names         = r.policies == "" ? [] : split(",", r.policies)
-      path                 = try(r.path, var.default_path)
-      max_session_duration = try(tonumber(r.max_session_duration), null)
-      tags                 = local.parse_tags(try(r.tags, ""))
-      }
+  # roles = {
+  #   for r in local.roles_raw : r.name => {
+  #     name                 = r.name
+  #     description          = try(r.description, null)
+  #     assume_file          = r.assume_policy_file
+  #     policy_names         = r.policies == "" ? [] : split(",", r.policies)
+  #     path                 = try(r.path, var.default_path)
+  #     max_session_duration = try(tonumber(r.max_session_duration), null)
+  #     tags                 = local.parse_tags(try(r.tags, ""))
+  #     }
+  # }
+roles = {
+  for r in local.roles_raw : r.name => {
+    name                 = r.name,
+    description          = try(r.description, null),
+    assume_file          = try(r.assume_policy_file, null),
+    policy_names         = r.policies == "" ? [] : split(",", r.policies),
+    path                 = try(r.path, var.default_path),
+    max_session_duration = try(tonumber(r.max_session_duration), null),
+    tags                 = local.parse_tags(try(r.tags, "")),   # ✅ 쉼표 추가
   }
+}
 
   parse_tags = function(tag_str) {
     tag_str == null || tag_str == "" ? {} : {
