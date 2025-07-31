@@ -15,12 +15,13 @@ locals {
   # AWS managed + service-linked managed ARN 통합
   combined_managed_policy_arns = merge(
     var.managed_policy_arns,
-    { for name in var.managed_service_role_policy_names :
-        name => lookup(var.managed_service_role_policy_arns, name, null)
-        if contains(var.managed_service_role_policy_arns, name)
+    {
+      for name in var.managed_service_role_policy_names :
+      name => lookup(var.managed_service_role_policy_arns, name, null)
+      if contains(keys(var.managed_service_role_policy_arns), name)
     }
   )
-
+  
   all_policy_arns = local.combined_managed_policy_arns
 
   role_policy_attachments_flat = flatten([
