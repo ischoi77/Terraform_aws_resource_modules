@@ -20,7 +20,7 @@ roles = {
     policy_names         = r.policies == "" ? [] : split(",", r.policies)
     path                 = try(r.path, var.default_path)
     max_session_duration = try(tonumber(r.max_session_duration), null)
-    tags = r.tags
+    tags = local.parse_tags(try(r.tags, ""))
   }
 }
 
