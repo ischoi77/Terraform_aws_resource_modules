@@ -12,23 +12,23 @@ locals {
   #     tags                 = local.parse_tags(try(r.tags, ""))
   #     }
   # }
-roles = {
-  for r in local.roles_raw : r.name => {
-    name                 = r.name
-    description          = try(r.description, null)
-    assume_file          = r.assume_policy_file
-    policy_names         = r.policies == "" ? [] : split(",", r.policies)
-    path                 = try(r.path, var.default_path)
-    max_session_duration = try(tonumber(r.max_session_duration), null)
-    tags = (
+  roles = {
+    for r in local.roles_raw : r.name => {
+      name                 = r.name
+      description          = try(r.description, null)
+      assume_file          = r.assume_policy_file
+      policy_names         = r.policies == "" ? [] : split(",", r.policies)
+      path                 = try(r.path, var.default_path)
+      max_session_duration = try(tonumber(r.max_session_duration), null)
+      tags = (
         r.tags == "" ? {} :
         {
           for pair in split(";", r.tags) :
           trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
         }
       )
+    }
   }
-}
 
 
   # AWS managed + service-linked managed ARN 통합
