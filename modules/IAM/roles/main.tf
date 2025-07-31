@@ -9,6 +9,13 @@ locals {
       policy_names         = r.policies == "" ? [] : split(",", r.policies)
       path                 = try(r.path, var.default_path)
       max_session_duration = try(tonumber(r.max_session_duration), null)
+      tags = (
+        r.tags == "" ? {} :
+        {
+          for pair in split(";", r.tags) :
+          trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
+        }
+      )
     }
   }
 
