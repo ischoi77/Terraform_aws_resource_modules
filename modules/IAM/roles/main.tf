@@ -67,6 +67,8 @@ resource "aws_iam_role" "this" {
   path                 = each.value.path
   max_session_duration = each.value.max_session_duration
 
+  tags = merge(var.common_tags, each.value.tags)
+
   lifecycle {
     ignore_changes = [ description ]
   }
