@@ -9,13 +9,13 @@ locals {
       policy_names         = r.policies == "" ? [] : split(",", r.policies)
       path                 = try(r.path, var.default_path)
       max_session_duration = try(tonumber(r.max_session_duration), null)
-      tags = (
-        r.tags == "" ? {} :
-        {
-          for pair in split(";", r.tags) :
-          trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
-        }
-      )
+      tags                 = local.parse_tags(try(r.tags, ""))
+    }
+  }
+  parse_tags = function(tag_str) {
+    tag_str == null || tag_str == "" ? {} : {
+      for pair in split(",", tag_str) : 
+      trimspace(split("=", pair)[0]) => trimspace(split("=", pair)[1])
     }
   }
 
@@ -74,7 +74,7 @@ resource "aws_iam_role" "this" {
   path                 = each.value.path
   max_session_duration = each.value.max_session_duration
 
-  tags = merge(var.common_tags, each.value.tags)
+  tags = merge(var.common_tags, try(each.value.tags, {}))
 
   lifecycle {
     ignore_changes = [ description ]
