@@ -51,6 +51,7 @@ locals {
     for sg_key, sg in local.sg_data :
     sg.sg_name => sg_key
   }
+}
 
 resource "aws_security_group" "this" {
   for_each = local.sg_data
