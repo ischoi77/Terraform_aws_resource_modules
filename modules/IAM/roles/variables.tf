@@ -23,7 +23,19 @@ variable "managed_service_role_policy_arns" {
   type        = map(string)
 }
 
+variable "managed_service_role_policy_names" {
+  description = "List of AWS service-linked role policy names (to auto-map from managed_service_role_policy_arns)"
+  type        = list(string)
+}
+
 variable "common_tags" {
   type    = map(string)
   default = {}
+}
+
+
+variable "default_path" {
+  description = "Default IAM role path"
+  type        = string
+  default     = "/"
 }
