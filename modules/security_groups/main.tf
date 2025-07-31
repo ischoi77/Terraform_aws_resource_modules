@@ -125,8 +125,8 @@ resource "aws_security_group_rule" "others" {
 
     # 2) '<sg->...' 형식이나 '123456789012/sg-...' 형식이면 그대로 사용
     (
-      startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ||
-      can(regex("^[0-9]+/sg-[0-9a-fA-F]+$", each.value.rule["SG_ID_or_CIDR"]))
+      startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") 
+      #|| can(regex("^[0-9]+/sg-[0-9a-fA-F]+$", each.value.rule["SG_ID_or_CIDR"])) # 현재 계정num/sg- 형태 사용안함.
     ) ? each.value.rule["SG_ID_or_CIDR"] :
 
     # 3) 그 외는 순수 SG_Name 이므로, 먼저 sg_name_to_key 로 key 로 변환한 뒤 lookup
