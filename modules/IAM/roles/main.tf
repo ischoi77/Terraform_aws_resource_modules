@@ -5,7 +5,7 @@ locals {
     for r in local.roles_raw : r.name => {
       name                 = r.name
       description          = try(r.description, null)
-      assume_role_policy   = file("${var.assume_role_policy_dir}/${r.assume_role_policy}.json")
+      assume_file          = r.assume_policy_file
       policy_names         = r.policies == "" ? [] : split(",", r.policies)
       path                 = try(r.path, var.default_path)
       max_session_duration = try(tonumber(r.max_session_duration), null)
@@ -37,6 +37,20 @@ locals {
     for r in local.role_policy_attachments_flat :
     r.key => r
   }
+  
+  assume_policy_paths = {
+    for role_name, role in local.roles :
+    role_name => "${path.root}/assume_role_policy_files/${trimspace(role.assume_file)}.json"
+  }
+
+  # 파일 존재 여부 확인
+  roles_with_policy_file = {
+    for role_name, role in local.roles :
+    role_name => merge(role, {
+      assume_policy_path = local.assume_policy_paths[role_name]
+    })
+    if fileexists(local.assume_policy_paths[role_name])
+  }
 }
 
 
@@ -45,7 +59,7 @@ resource "aws_iam_role" "this" {
 
   name                 = each.value.name
   description          = each.value.description
-  assume_role_policy   = each.value.assume_role_policy
+  assume_role_policy   = file(each.value.assume_policy_path)
   path                 = each.value.path
   max_session_duration = each.value.max_session_duration
   tags = merge(var.common_tags, each.value.tags)
