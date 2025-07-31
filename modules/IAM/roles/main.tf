@@ -20,7 +20,7 @@ roles = {
     policy_names         = r.policies == "" ? [] : split(",", r.policies)
     path                 = try(r.path, var.default_path)
     max_session_duration = try(tonumber(r.max_session_duration), null)
-    tags                 = local.parse_tags(try(r.tags, ""))   # ✅ 이 줄 뒤에 쉼표 없음
+    tags = r.tags
   }
 }
 
