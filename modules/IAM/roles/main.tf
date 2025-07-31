@@ -69,6 +69,7 @@ resource "aws_iam_role" "this" {
 
   name               = each.key
   assume_role_policy = file(each.value.assume_policy_path)
+  description        = each.key
   tags = merge(var.common_tags, each.value.tags)
 }
 
