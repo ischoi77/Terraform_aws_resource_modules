@@ -10,8 +10,9 @@ locals {
       path                 = try(r.path, var.default_path)
       max_session_duration = try(tonumber(r.max_session_duration), null)
       tags                 = local.parse_tags(try(r.tags, ""))
-    }
+      }
   }
+
   parse_tags = function(tag_str) {
     tag_str == null || tag_str == "" ? {} : {
       for pair in split(",", tag_str) : 
