@@ -43,9 +43,14 @@ locals {
   // 키는 "<vpc_id>_<SG_Name>" 형식으로 생성
   sg_lookup = {
     for sg_key, sg in local.sg_data :
-    sg.sg_name => aws_security_group.this[sg_key].id
+    sg_key => aws_security_group.this[sg_key].id
   }
-}
+
+  # 순수 SG_Name → sg_key("<vpc>_<sg_name>") 변환용 매핑
+  sg_name_to_key = {
+    for sg_key, sg in local.sg_data :
+    sg.sg_name => sg_key
+  }
 
 resource "aws_security_group" "this" {
   for_each = local.sg_data
@@ -114,10 +119,21 @@ resource "aws_security_group_rule" "others" {
   )
 
   source_security_group_id = (
-    can(regex("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$", each.value.rule["SG_ID_or_CIDR"])) ?
-      null :
-      lookup(local.sg_lookup, each.value.rule["SG_ID_or_CIDR"], null)
-  )
+    # 1) CIDR 이면 null
+    can(regex("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$", each.value.rule["SG_ID_or_CIDR"])) ? null :
 
+    # 2) '<sg->...' 형식이나 '123456789012/sg-...' 형식이면 그대로 사용
+    (
+      startswith(each.value.rule["SG_ID_or_CIDR"], "<sg->") ||
+      can(regex("^[0-9]+/sg-[0-9a-fA-F]+$", each.value.rule["SG_ID_or_CIDR"]))
+    ) ? each.value.rule["SG_ID_or_CIDR"] :
+
+    # 3) 그 외는 순수 SG_Name 이므로, 먼저 sg_name_to_key 로 key 로 변환한 뒤 lookup
+    lookup(
+      local.sg_lookup,
+      local.sg_name_to_key[each.value.rule["SG_ID_or_CIDR"]],
+      null
+    )
+  )
   description = trimspace(each.value.rule.Rule_Description) != "" ? each.value.rule.Rule_Description : ""
 }
