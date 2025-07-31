@@ -22,7 +22,10 @@ locals {
     }
   )
   
-  all_policy_arns = local.combined_managed_policy_arns
+  all_policy_arns = merge(
+  local.combined_managed_policy_arns,
+  var.custom_policy_arns
+)
 
   role_policy_attachments_flat = flatten([
     for role_key, role in local.roles : [
