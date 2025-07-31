@@ -56,14 +56,13 @@ locals {
 
 
 resource "aws_iam_role" "this" {
-  for_each = local.roles
+  for_each = local.roles_with_policy_file
 
   name                 = each.value.name
   description          = each.value.description
   assume_role_policy   = file(each.value.assume_policy_path)
   path                 = each.value.path
   max_session_duration = each.value.max_session_duration
-  tags = merge(var.common_tags, each.value.tags)
 
   lifecycle {
     ignore_changes = [ description ]
@@ -93,7 +92,10 @@ resource "aws_iam_role" "this" {
 # }
 
 resource "aws_iam_role_policy_attachment" "this" {
-  for_each = local.role_policy_attachments
+  for_each = {
+    for k, v in local.role_policy_attachments :
+    k => v if contains(keys(aws_iam_role.this), v.role_name)
+  }
 
   role       = aws_iam_role.this[each.value.role_name].name
   policy_arn = each.value.policy_arn
