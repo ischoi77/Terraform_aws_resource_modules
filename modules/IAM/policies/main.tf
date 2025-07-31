@@ -45,4 +45,8 @@ resource "aws_iam_policy" "this" {
 
   name   = each.value.name
   policy = each.value.policy
+
+  lifecycle {
+    ignore_changes = [ description ]
+  }
 }
