@@ -23,3 +23,9 @@ output "managed_policy_arns" {
 output "managed_service_role_policy_arns" {
   value = local.managed_service_role_policy_arns
 }
+
+
+output "managed_service_role_policy_names" {
+  description = "List of managed service-linked policy names used in this module"
+  value       = var.policies.managed_service_role_policy_names
+}
