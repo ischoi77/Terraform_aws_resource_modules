@@ -5,7 +5,7 @@ Email: ischoi77@gmail.com, knight7711@naver.com
 Created: 2025-03-27
 Description: AWS VPC Security Groups 모듈 정의
 repo_url: https://github.com/ischoi77/Terraform_aws_resource_modules
-Version: v1.0.0
+Version: v3.0.0
 */
 
 locals {
