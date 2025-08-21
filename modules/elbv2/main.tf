@@ -1,3 +1,13 @@
+/*
+Title: 대규모 infra 구성 및 관리를 위한 AWS 리소스 모듈
+Author: 최인석(Choi In-seok)
+Email: ischoi77@gmail.com, knight7711@naver.com
+Created: 2025-07-15
+Description: AWS Elbv2 모듈 정의
+repo_url: https://github.com/ischoi77/Terraform_aws_resource_modules
+Version: v1.0.0
+*/
+
 locals {
   lb_security_groups = {
     for lb_key, lb in var.elbv2s :
@@ -9,19 +19,6 @@ locals {
     lb_key => [for subnet_name in lb.lb.subnet_names : var.subnet_ids[subnet_name]]
   }
 
-# all_attachments = flatten([
-#   for lb_key, lb in var.elbv2s : (
-#     lb.attachments != null ? [
-#       for attachment_key, attachment in lb.attachments : {
-#         lb_key           = lb_key
-#         target_group_key = attachment.target_group_name
-#         target_group_arn = var.target_group_arns["${lb_key}::${attachment.target_group_name}"]
-#         target_id        = attachment.target_id
-#         port             = attachment.port
-#       }
-#     ] : []
-#   )
-# ])
 
   listener_entries = flatten([
     for lb_key, lb in var.elbv2s : [
@@ -165,147 +162,3 @@ resource "aws_lb_listener_rule" "this" {
     }
   }
 }
-
-# resource "aws_lb_target_group_attachment" "this" {
-#   for_each = {
-#     for k, v in local.all_attachments : k => v if v.target_id != null
-#   }
-
-#   target_group_arn = each.value.target_group_arn
-#   target_id        = each.value.target_id
-#   port             = each.value.port
-
-#   lifecycle {
-#     create_before_destroy = true
-#     ignore_changes        = [target_id]
-#   }
-# }
-
-# resource "aws_lb_target_group_attachment" "this" {
-#   for_each = {
-#     for lb_key, lb in var.elbv2s :
-#     lb.attachments != null ? {
-#       for attachment_key, attachment in lb.attachments :
-#       "${lb_key}-${attachment_key}" => {
-#         lb_key           = lb_key
-#         target_group_key = attachment.target_group_name
-#         target_group_arn = var.target_group_arns[attachment.target_group_name]
-#         target_id        = attachment.target_id
-#         port             = attachment.port
-#       }
-#     } : {}
-#   }
-
-#   target_group_arn = each.value.target_group_arn
-#   target_id        = each.value.target_id
-#   port             = each.value.port
-
-#   lifecycle {
-#     create_before_destroy = true
-#     ignore_changes        = [target_id]
-#   }
-# }
-
-
-# resource "aws_lb_listener" "this" {
-#   for_each = merge(flatten([
-#     for lb_key, lb in var.elbv2s : [
-#       for listener_key, listener in lb.listeners : [
-#         {
-#             lb_key           = lb_key
-#             port             = listener.port
-#             protocol         = listener.protocol
-#             ssl_policy       = try(listener.ssl_policy, null)
-#             certificate_arn  = try(listener.certificate_arn, null)
-#             target_group_arn = listener.default_action.target_group_name
-#             default_action   = listener.default_action
-#         }
-#       ]
-#     ]
-#   ]))
-
-
-#   load_balancer_arn = aws_lb.this[each.value.lb_key].arn
-#   port              = each.value.port
-#   protocol          = each.value.protocol
-#   ssl_policy        = each.value.ssl_policy
-#   certificate_arn   = each.value.certificate_arn
-
-#   default_action {
-#     type             = each.value.default_action.type
-#     target_group_arn = var.target_group_arns[each.value.target_group_arn]
-#   }
-# }
-
-# resource "aws_lb_listener_rule" "this" {
-#   for_each = merge(flatten([
-#     for lb_key, lb in var.elbv2s : (
-#       lb.listener_rules != null ? [
-#         for rule_key, rule in lb.listener_rules : [
-#           {
-#               listener_arn     = aws_lb_listener.this["${lb_key}::${rule.listener_key}"].arn
-#               priority         = rule.priority
-#               action           = rule.action
-#               target_group_arn = rule.action.target_group_name
-#               conditions       = rule.conditions
-#           }
-#         ]
-#       ] : []
-#     )
-#   ]))
-
-#   listener_arn = each.value.listener_arn
-#   priority     = each.value.priority
-
-#   action {
-#     type             = each.value.action.type
-#     target_group_arn = var.target_group_arns[each.value.target_group_arn]
-#   }
-
-#   dynamic "condition" {
-#     for_each = try(each.value.conditions.path_patterns, [])
-#     content {
-#       path_pattern {
-#         values = [condition.value]
-#       }
-#     }
-#   }
-
-#   dynamic "condition" {
-#     for_each = try(each.value.conditions.host_headers, [])
-#     content {
-#       host_header {
-#         values = [condition.value]
-#       }
-#     }
-#   }
-
-#   dynamic "condition" {
-#     for_each = try(each.value.conditions.http_headers, [])
-#     content {
-#       http_header {
-#         http_header_name = condition.value.name
-#         values           = condition.value.values
-#       }
-#     }
-#   }
-
-#   dynamic "condition" {
-#     for_each = try(each.value.conditions.query_strings, [])
-#     content {
-#       query_string {
-#         key   = lookup(condition.value, "key", null)
-#         value = condition.value.value
-#       }
-#     }
-#   }
-
-#   dynamic "condition" {
-#     for_each = try(each.value.conditions.source_ips, [])
-#     content {
-#       source_ip {
-#         values = [condition.value]
-#       }
-#     }
-#   }
-# }

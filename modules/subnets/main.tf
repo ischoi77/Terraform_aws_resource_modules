@@ -1,3 +1,13 @@
+/*
+Title: 대규모 서비스 구성을 위한 AWS 리소스 생성 모듈
+Author: 최인석(Choi In-seok)
+Email: ischoi77@gmail.com, knight7711@naver.com
+Created: 2025-03-25
+Description: AWS VPC Subnet 모듈 정의
+repo_url: https://github.com/ischoi77/Terraform_aws_resource_modules
+Version: v1.0.0
+*/
+
 
 locals {
   # 각 VPC별 CSV 파일을 읽어 파싱하여 VPC별 서브넷 리스트를 생성
@@ -27,79 +37,6 @@ locals {
     for s in local.processed_subnets : "${s.vpc_key}-${s.name}" => s
   }
 
-  subnets_by_tag_group = {
-    App = {
-      for k, s in local.subnets_map :
-      k => s if can(regex("\\.app\\.", s.name))
-    }
-    Ops = {
-      for k, s in local.subnets_map :
-      k => s if (
-        can(regex("\\.ops\\.", s.name)) || can(regex("\\.infra\\.", s.name))
-      )
-    }
-  }
-  subnet_tag_sets = {
-    app = [
-      {
-        key   = var.subnet_tags.app.key1
-        value = var.subnet_tags.app.value1
-      },
-      {
-        key   = var.subnet_tags.app.key2
-        value = var.subnet_tags.app.value2
-      },
-      {
-        key   = var.subnet_tags.app.key3
-        value = var.subnet_tags.app.value3
-      },
-      {
-        key   = var.subnet_tags.app.key4
-        value = var.subnet_tags.app.value4
-      },
-    ]
-    ops = [
-      {
-        key   = var.subnet_tags.ops.key1
-        value = var.subnet_tags.ops.value1
-      },
-      {
-        key   = var.subnet_tags.ops.key2
-        value = var.subnet_tags.ops.value2
-      },
-      {
-        key   = var.subnet_tags.ops.key3
-        value = var.subnet_tags.ops.value3
-      },
-      {
-        key   = var.subnet_tags.ops.key4
-        value = var.subnet_tags.ops.value4
-      },
-    ]
-  }
-  app_tag_pairs = flatten([
-    for subnet_key, subnet in local.subnets_by_tag_group.App : [
-      for idx, tag in local.subnet_tag_sets.app : {
-        key         = "${subnet_key}-${idx}"
-        vpc_key     = subnet.vpc_key
-        subnet_name = subnet.name
-        tag_key     = tag.key
-        tag_value   = tag.value
-      }
-    ]
-  ])
-  ops_tag_pairs = flatten([
-    for subnet_key, subnet in local.subnets_by_tag_group.Ops : [
-      for idx, tag in local.subnet_tag_sets.ops : {
-        key         = "${subnet_key}-${idx}"
-        vpc_key     = subnet.vpc_key
-        subnet_name = subnet.name
-        tag_key     = tag.key
-        tag_value   = tag.value
-      }
-    ]
-  ])
-
 }
 
 resource "aws_subnet" "this" {
@@ -116,33 +53,4 @@ resource "aws_subnet" "this" {
   lifecycle {
     ignore_changes = [ tags ]
   }
-}
-
-
-resource "aws_ec2_tag" "subnet_all" {
-  for_each = local.subnets_map
-  resource_id = aws_subnet.this[each.key].id
-  key = "immutable_metadata"
-  value = jsonencode({"purpose" = "${each.value.purpose}"})
-}
-
-
-resource "aws_ec2_tag" "subnet_app_group" {
-  for_each = {
-    for tag in local.app_tag_pairs : tag.key => tag
-  }
-
-  resource_id = aws_subnet.this["${each.value.vpc_key}-${each.value.subnet_name}"].id
-  key         = each.value.tag_key
-  value       = each.value.tag_value
-}
-
-resource "aws_ec2_tag" "subnet_ops_group" {
-  for_each = {
-    for tag in local.ops_tag_pairs : tag.key => tag
-  }
-
-  resource_id = aws_subnet.this["${each.value.vpc_key}-${each.value.subnet_name}"].id
-  key         = each.value.tag_key
-  value       = each.value.tag_value
 }

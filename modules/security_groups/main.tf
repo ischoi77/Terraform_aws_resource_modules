@@ -1,3 +1,13 @@
+/*
+Title: 대규모 infra 구성 및 관리를 위한 AWS 리소스 모듈
+Author: 최인석(Choi In-seok)
+Email: ischoi77@gmail.com, knight7711@naver.com
+Created: 2025-03-27
+Description: AWS VPC Security Groups 모듈 정의
+repo_url: https://github.com/ischoi77/Terraform_aws_resource_modules
+Version: v1.0.0
+*/
+
 locals {
   # 모듈 루트 하위의 vpc_sg_rules 폴더 내 모든 CSV 파일 검색
   sg_rule_files = fileset("${path.root}/vpc_sg_rules", "**/*.csv")

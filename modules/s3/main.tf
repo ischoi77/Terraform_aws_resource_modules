@@ -1,3 +1,13 @@
+/*
+Title: 대규모 infra 구성 및 관리를 위한 AWS 리소스 모듈
+Author: 최인석(Choi In-seok)
+Email: ischoi77@gmail.com, knight7711@naver.com
+Created: 2025-03-24
+Description: AWS S3 모듈 정의
+repo_url: https://github.com/ischoi77/Terraform_aws_resource_modules
+Version: v1.0.0
+*/
+
 resource "aws_s3_bucket" "this" {
   for_each = var.buckets
 
@@ -5,35 +15,6 @@ resource "aws_s3_bucket" "this" {
   force_destroy = each.value.force_destroy
   tags          = merge(var.common_tags, each.value.tags)
 }
-
-# resource "aws_s3_bucket_ownership_controls" "this" {
-#   for_each = var.buckets
-
-#   bucket = aws_s3_bucket.this[each.key].id
-#   rule {
-#     object_ownership = "BucketOwnerEnforced"
-#   }
-# }
-
-# resource "aws_s3_bucket_acl" "this" {
-#   for_each = var.buckets
-
-#   depends_on = [aws_s3_bucket_ownership_controls.this]
-
-#   bucket = aws_s3_bucket.this[each.key].id
-#   acl    = each.value.acl
-# }
-
-# resource "aws_s3_bucket_versioning" "this" {
-#   for_each = {
-#     for k, v in var.buckets : k => v if v.enable_versioning
-#   }
-
-#   bucket = aws_s3_bucket.this[each.key].id
-#   versioning_configuration {
-#     status = "Enabled"
-#   }
-# }
 
 resource "aws_s3_bucket_logging" "this" {
   for_each = {

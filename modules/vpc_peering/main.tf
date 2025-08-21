@@ -1,3 +1,14 @@
+/*
+Title: 대규모 infra 구성 및 관리를 위한 AWS 리소스 모듈
+Author: 최인석(Choi In-seok)
+Email: ischoi77@gmail.com, knight7711@naver.com
+Created: 2025-03-24
+Description: AWS VPC Peering 모듈 정의
+repo_url: https://github.com/ischoi77/Terraform_aws_resource_modules
+Version: v1.0.0
+*/
+
+
 # VPC Peering Connection 생성
 resource "aws_vpc_peering_connection" "this" {
   for_each = var.vpc_peering_config
