@@ -2,9 +2,8 @@
 
 * 메인 컨셉
 
-    1. 원격 모듈 사용 (git repo, terraform registry 등)
-    2. 변수 분리 및 list file 및 csv 파일 사용
-    3. 모듈 호출 구문 단순화
+    1. 변수 분리 및 list file 및 csv 파일 사용
+    2. 모듈 호출 구문 단순화
 
 * 경로 구조
 
@@ -52,4 +51,5 @@
 
 
 * 개선 사항 (from v3.40.0)
+
     1. SG rule 관련 로직 개선 (self rule 관련)
