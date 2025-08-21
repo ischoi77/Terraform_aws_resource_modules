@@ -1,5 +1,6 @@
 # AWS Terraform provider 5.45.0 용 모듈
-
+* Terraform v1.9.x 사용
+  
 * 메인 컨셉
 
     1. 변수 분리 및 list file 및 csv 파일 사용
@@ -53,3 +54,4 @@
 * 개선 사항 (from v3.40.0)
 
     1. SG rule 관련 로직 개선 (self rule 관련)
+
