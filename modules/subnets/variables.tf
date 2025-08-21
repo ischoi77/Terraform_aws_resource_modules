@@ -25,15 +25,3 @@ variable "subnet_csv_files" {
   type = map(string)
 }
 
-variable "subnet_tags" {
-  type = map(object({
-    key1   = string
-    value1 = string
-    key2   = string
-    value2 = string
-    key3   = string
-    value3 = string
-    key4   = string
-    value4 = string
-  }))
-}
