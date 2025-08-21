@@ -1,5 +1,5 @@
 /*
-Title: SPCv2 NAT-Gateway module
+Title: AWS NAT-Gateway module
 Author: Inseok-Choi
 contect: is25.choi@partner.samsung.com, ischoi.scloud@gmail.com
 

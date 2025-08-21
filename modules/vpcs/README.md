@@ -1,6 +1,6 @@
-# SPCv2 VPC 생성 모듈
+# AWS VPC 생성 모듈
 
-이 모듈은 SPCv2 에서 VPC를 생성 하는 모듈이다.
+이 모듈은 AWS 에서 VPC를 생성 하는 모듈이다.
 
 ## Table of Contents
 
