@@ -65,7 +65,16 @@ locals {
     "${x.inst_key}-${x.idx}" => x
   }
 
-  # ===== 핵심 변경: SG key(<vpc>_<sg>) -> sg-id 변환 =====
+# ===== 외부모듈에서 입력값 subnet_ids, security_group_ids 변환 =====
+  resolved_subnet_ids = {
+    for inst_name, inst in var.instances :
+    inst_name => (
+      try(inst.subnet_name, null) == null
+      ? null
+      : lookup(var.subnet_ids, inst.subnet_name, null)
+    )
+  }
+
   resolved_vpc_security_group_ids = {
     for inst_name, inst in var.instances :
     inst_name => (
@@ -166,7 +175,9 @@ resource "aws_instance" "this" {
   instance_type = each.value.instance_type
 
   availability_zone           = try(each.value.availability_zone, null)
-  subnet_id                   = try(each.value.subnet_id, null)
+  
+  # subnet 이름키 목록 -> subnet-id 목록 =====
+  subnet_id                   = try(local.resolved_subnet_ids[each.key], null)
   associate_public_ip_address = try(each.value.associate_public_ip_address, null)
   private_ip                  = try(each.value.private_ip, null)
   ipv6_address_count          = try(each.value.ipv6_address_count, null)
@@ -203,7 +214,7 @@ resource "aws_instance" "this" {
   shutdown_behavior       = try(each.value.shutdown_behavior, null)
   instance_initiated_shutdown_behavior = try(each.value.instance_initiated_shutdown_behavior, null)
 
-  # ===== 핵심: SG 이름키 목록 -> sg-id 목록 =====
+  # SG 이름키 목록 -> sg-id 목록 =====
   vpc_security_group_ids = try(local.resolved_vpc_security_group_ids[each.key], null)
 
   # EC2-Classic 용(보통 미사용)

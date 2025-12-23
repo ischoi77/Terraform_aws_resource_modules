@@ -32,9 +32,9 @@ locals {
 
   
   # 평면화한 리스트를 고유 key를 가지는 map으로 변환합니다.
-  # 고유 key는 "<vpc_key>-<subnet_name>" 형식으로 생성합니다.
+  # 고유 key는 "<vpc_key>_<subnet_name>" 형식으로 생성합니다.
   subnets_map = {
-    for s in local.processed_subnets : "${s.vpc_key}-${s.name}" => s
+    for s in local.processed_subnets : "${s.vpc_key}_${s.name}" => s
   }
 
 }

@@ -15,6 +15,12 @@ variable "security_group_ids" {
   default     = {}
 }
 
+variable "subnet_ids" {
+  description = "subnets 모듈 output (key=<vpc_name>_<subnet_name>, value=subnet-xxxx)"
+  type        = map(string)
+}
+
+
 variable "instances" {
   description = "키=리소스명(Name 태그로도 사용). 값=EC2 설정"
   type = map(object({
@@ -24,7 +30,7 @@ variable "instances" {
 
     # ===== 선택(주요) =====
     availability_zone           = optional(string)
-    subnet_id                   = optional(string)
+    subnet_name                 = optional(string)
     associate_public_ip_address = optional(bool)
     private_ip                  = optional(string)
     ipv6_address_count          = optional(number)
