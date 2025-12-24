@@ -162,7 +162,7 @@ resource "aws_network_interface_attachment" "this" {
   instance_id          = aws_instance.this[each.value.inst_key].id
   network_interface_id = aws_network_interface.this[each.key].id
   device_index         = each.value.eni.attachment.device_index
-  network_card_index   = try(each.value.eni.attachment.network_card_index, null)
+  #network_card_index   = try(each.value.eni.attachment.network_card_index, null)
 }
 
 # =========================
