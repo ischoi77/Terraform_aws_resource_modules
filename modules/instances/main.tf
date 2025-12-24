@@ -218,7 +218,7 @@ resource "aws_instance" "this" {
   vpc_security_group_ids = try(local.resolved_vpc_security_group_ids[each.key], null)
 
   # EC2-Classic 용(보통 미사용)
-  security_groups = try(each.value.security_groups, null)ㄴ
+  security_groups = try(each.value.security_groups, null)
 
   volume_tags = try(each.value.volume_tags, null)
 
