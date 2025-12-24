@@ -211,14 +211,14 @@ resource "aws_instance" "this" {
   placement_group         = try(each.value.placement_group, null)
   tenancy                 = try(each.value.tenancy, null)
   source_dest_check       = try(each.value.source_dest_check, null)
-  shutdown_behavior       = try(each.value.shutdown_behavior, null)
+  #shutdown_behavior       = try(each.value.shutdown_behavior, null)
   instance_initiated_shutdown_behavior = try(each.value.instance_initiated_shutdown_behavior, null)
 
   # SG 이름키 목록 -> sg-id 목록 =====
   vpc_security_group_ids = try(local.resolved_vpc_security_group_ids[each.key], null)
 
   # EC2-Classic 용(보통 미사용)
-  security_groups = try(each.value.security_groups, null)
+  security_groups = try(each.value.security_groups, null)ㄴ
 
   volume_tags = try(each.value.volume_tags, null)
 
@@ -297,7 +297,7 @@ resource "aws_instance" "this" {
           spot_instance_type             = try(spot_options.value.spot_instance_type, null)
           instance_interruption_behavior = try(spot_options.value.instance_interruption_behavior, null)
           valid_until                    = try(spot_options.value.valid_until, null)
-          valid_from                     = try(spot_options.value.valid_from, null)
+          #valid_from                     = try(spot_options.value.valid_from, null)
         }
       }
     }
