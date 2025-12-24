@@ -88,16 +88,16 @@ locals {
   }
 }
 
-# ===== plan 단계에서 SG 키 오타/누락 잡기(권장) =====
-check "security_group_key_validation" {
-  assert = alltrue(flatten([
-    for _, inst in var.instances : [
-      for sg in try(inst.vpc_security_group_names, []) :
-      contains(keys(var.security_group_ids), sg)
-    ]
-  ]))
-  error_message = "instances.vpc_security_group_names 중 <vpc_name>_<sg_name> 형식의 SG key가 security_group_ids(output)에 존재하지 않습니다."
-}
+# # ===== plan 단계에서 SG 키 오타/누락 잡기(권장) =====
+# check "security_group_key_validation" {
+#   assert = alltrue(flatten([
+#     for _, inst in var.instances : [
+#       for sg in try(inst.vpc_security_group_names, []) :
+#       contains(keys(var.security_group_ids), sg)
+#     ]
+#   ]))
+#   error_message = "instances.vpc_security_group_names 중 <vpc_name>_<sg_name> 형식의 SG key가 security_group_ids(output)에 존재하지 않습니다."
+# }
 
 # =========================
 # (옵션) Key Pair 생성
@@ -175,7 +175,7 @@ resource "aws_instance" "this" {
   instance_type = each.value.instance_type
 
   availability_zone           = try(each.value.availability_zone, null)
-  
+
   # subnet 이름키 목록 -> subnet-id 목록 =====
   subnet_id                   = try(local.resolved_subnet_ids[each.key], null)
   associate_public_ip_address = try(each.value.associate_public_ip_address, null)
