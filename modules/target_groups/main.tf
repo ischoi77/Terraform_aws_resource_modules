@@ -15,7 +15,7 @@ locals {
         key = "${tg_name}-${idx}"
         value = {
           target_group_name = tg_name
-          target_id         = target.target_id
+          target_id         = var.instance_ids[target.target_id]
           port              = target.port
         }
       }

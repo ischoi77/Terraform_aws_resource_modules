@@ -34,3 +34,8 @@ variable "vpc_ids" {
   description = "VPC 이름 → ID 매핑"
   type        = map(string)
 }
+
+variable "instance_ids" {
+  description = "Instance 이름 → ID 매핑"
+  type        = map(string)
+}
