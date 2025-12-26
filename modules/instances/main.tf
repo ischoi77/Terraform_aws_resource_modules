@@ -363,9 +363,9 @@ resource "aws_instance" "this" {
 
   tags = local.instance_tags[each.key]
 
-  depends_on = [
-    aws_network_interface.this
-  ]
+  # depends_on = [
+  #   aws_network_interface.this
+  # ]
 }
 
 # =========================

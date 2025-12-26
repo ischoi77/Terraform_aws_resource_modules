@@ -33,7 +33,7 @@ output "eip_allocation_ids" {
 #   value       = { for k, v in aws_ebs_volume.extra : k => v.id }
 # }
 
-output "created_eni_ids" {
-  description = "별도 생성 ENI IDs (key=instance-idx)"
-  value       = { for k, v in aws_network_interface.this : k => v.id }
-}
+# output "created_eni_ids" {
+#   description = "별도 생성 ENI IDs (key=instance-idx)"
+#   value       = { for k, v in aws_network_interface.this : k => v.id }
+# }
