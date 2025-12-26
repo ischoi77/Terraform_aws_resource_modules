@@ -28,10 +28,10 @@ output "eip_allocation_ids" {
   value       = { for k, v in aws_eip.this : k => v.id }
 }
 
-output "extra_ebs_volume_ids" {
-  description = "추가 EBS 볼륨 IDs (key=instance-idx)"
-  value       = { for k, v in aws_ebs_volume.extra : k => v.id }
-}
+# output "extra_ebs_volume_ids" {
+#   description = "추가 EBS 볼륨 IDs (key=instance-idx)"
+#   value       = { for k, v in aws_ebs_volume.extra : k => v.id }
+# }
 
 output "created_eni_ids" {
   description = "별도 생성 ENI IDs (key=instance-idx)"
