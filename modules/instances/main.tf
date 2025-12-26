@@ -33,21 +33,21 @@ locals {
     if try(v.allocate_eip, false) == true
   }
 
-  # Extra EBS volumes flatten
-  extra_ebs = flatten([
-    for ik, iv in var.instances : [
-      for idx, vol in try(iv.extra_ebs_volumes, []) : {
-        inst_key = ik
-        idx      = idx
-        vol      = vol
-      }
-    ]
-  ])
+  # # Extra EBS volumes flatten
+  # extra_ebs = flatten([
+  #   for ik, iv in var.instances : [
+  #     for idx, vol in try(iv.extra_ebs_volumes, []) : {
+  #       inst_key = ik
+  #       idx      = idx
+  #       vol      = vol
+  #     }
+  #   ]
+  # ])
 
-  extra_ebs_map = {
-    for x in local.extra_ebs :
-    "${x.inst_key}-${x.idx}" => x
-  }
+  # extra_ebs_map = {
+  #   for x in local.extra_ebs :
+  #   "${x.inst_key}-${x.idx}" => x
+  # }
 
   # ENI flatten
   enis = flatten([
@@ -392,38 +392,38 @@ resource "aws_eip_association" "this" {
 # =========================
 # (옵션) Extra EBS Volume + Attachment
 # =========================
-resource "aws_ebs_volume" "extra" {
-  for_each = local.extra_ebs_map
+# resource "aws_ebs_volume" "extra" {
+#   for_each = local.extra_ebs_map
 
-  availability_zone = coalesce(
-    try(each.value.vol.availability_zone, null),
-    aws_instance.this[each.value.inst_key].availability_zone
-  )
+#   availability_zone = coalesce(
+#     try(each.value.vol.availability_zone, null),
+#     aws_instance.this[each.value.inst_key].availability_zone
+#   )
 
-  size                 = try(each.value.vol.size, null)
-  type                 = try(each.value.vol.type, null)
-  iops                 = try(each.value.vol.iops, null)
-  throughput           = try(each.value.vol.throughput, null)
-  encrypted            = try(each.value.vol.encrypted, null)
-  kms_key_id           = try(each.value.vol.kms_key_id, null)
-  snapshot_id          = try(each.value.vol.snapshot_id, null)
-  multi_attach_enabled = try(each.value.vol.multi_attach_enabled, null)
+#   size                 = try(each.value.vol.size, null)
+#   type                 = try(each.value.vol.type, null)
+#   iops                 = try(each.value.vol.iops, null)
+#   throughput           = try(each.value.vol.throughput, null)
+#   encrypted            = try(each.value.vol.encrypted, null)
+#   kms_key_id           = try(each.value.vol.kms_key_id, null)
+#   snapshot_id          = try(each.value.vol.snapshot_id, null)
+#   multi_attach_enabled = try(each.value.vol.multi_attach_enabled, null)
 
-  tags = merge(
-    local.instance_tags[each.value.inst_key],
-    try(each.value.vol.tags, {}),
-    { "ExtraEBSIndex" = tostring(each.value.idx) }
-  )
-}
+#   tags = merge(
+#     local.instance_tags[each.value.inst_key],
+#     try(each.value.vol.tags, {}),
+#     { "ExtraEBSIndex" = tostring(each.value.idx) }
+#   )
+# }
 
-resource "aws_volume_attachment" "extra" {
-  for_each = local.extra_ebs_map
+# resource "aws_volume_attachment" "extra" {
+#   for_each = local.extra_ebs_map
 
-  device_name = each.value.vol.device_name
-  volume_id   = aws_ebs_volume.extra[each.key].id
-  instance_id = aws_instance.this[each.value.inst_key].id
+#   device_name = each.value.vol.device_name
+#   volume_id   = aws_ebs_volume.extra[each.key].id
+#   instance_id = aws_instance.this[each.value.inst_key].id
 
-  force_detach                 = try(each.value.vol.force_detach, null)
-  skip_destroy                 = try(each.value.vol.skip_destroy, null)
-  stop_instance_before_detaching = try(each.value.vol.stop_instance_before_detaching, null)
-}
+#   force_detach                 = try(each.value.vol.force_detach, null)
+#   skip_destroy                 = try(each.value.vol.skip_destroy, null)
+#   stop_instance_before_detaching = try(each.value.vol.stop_instance_before_detaching, null)
+# }
