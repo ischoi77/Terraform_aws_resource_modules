@@ -50,20 +50,20 @@ locals {
   # }
 
   # ENI flatten
-  enis = flatten([
-    for ik, iv in var.instances : [
-      for idx, eni in try(iv.create_enis, []) : {
-        inst_key = ik
-        idx      = idx
-        eni      = eni
-      }
-    ]
-  ])
+  # enis = flatten([
+  #   for ik, iv in var.instances : [
+  #     for idx, eni in try(iv.create_enis, []) : {
+  #       inst_key = ik
+  #       idx      = idx
+  #       eni      = eni
+  #     }
+  #   ]
+  # ])
 
-  enis_map = {
-    for x in local.enis :
-    "${x.inst_key}-${x.idx}" => x
-  }
+  # enis_map = {
+  #   for x in local.enis :
+  #   "${x.inst_key}-${x.idx}" => x
+  # }
 
 # ===== 외부모듈에서 입력값 subnet_ids, security_group_ids 변환 =====
   resolved_subnet_ids = {
@@ -136,34 +136,34 @@ resource "aws_iam_instance_profile" "this" {
 # =========================
 # (옵션) 별도 ENI 생성
 # =========================
-resource "aws_network_interface" "this" {
-  for_each = local.enis_map
+# resource "aws_network_interface" "this" {
+#   for_each = local.enis_map
 
-  subnet_id         = each.value.eni.subnet_id
-  private_ips       = try(each.value.eni.private_ips, null)
-  security_groups   = try(each.value.eni.security_groups, null)
-  source_dest_check = try(each.value.eni.source_dest_check, null)
-  description       = try(each.value.eni.description, null)
+#   subnet_id         = each.value.eni.subnet_id
+#   private_ips       = try(each.value.eni.private_ips, null)
+#   security_groups   = try(each.value.eni.security_groups, null)
+#   source_dest_check = try(each.value.eni.source_dest_check, null)
+#   description       = try(each.value.eni.description, null)
 
-  tags = merge(
-    local.instance_tags[each.value.inst_key],
-    try(each.value.eni.tags, {}),
-    { "ENIIndex" = tostring(each.value.idx) }
-  )
-}
+#   tags = merge(
+#     local.instance_tags[each.value.inst_key],
+#     try(each.value.eni.tags, {}),
+#     { "ENIIndex" = tostring(each.value.idx) }
+#   )
+# }
 
-resource "aws_network_interface_attachment" "this" {
-  for_each = {
-    for k, v in local.enis_map :
-    k => v
-    if try(v.eni.attachment, null) != null
-  }
+# resource "aws_network_interface_attachment" "this" {
+#   for_each = {
+#     for k, v in local.enis_map :
+#     k => v
+#     if try(v.eni.attachment, null) != null
+#   }
 
-  instance_id          = aws_instance.this[each.value.inst_key].id
-  network_interface_id = aws_network_interface.this[each.key].id
-  device_index         = each.value.eni.attachment.device_index
-  #network_card_index   = try(each.value.eni.attachment.network_card_index, null)
-}
+#   instance_id          = aws_instance.this[each.value.inst_key].id
+#   network_interface_id = aws_network_interface.this[each.key].id
+#   device_index         = each.value.eni.attachment.device_index
+#   #network_card_index   = try(each.value.eni.attachment.network_card_index, null)
+# }
 
 # =========================
 # EC2 Instance
